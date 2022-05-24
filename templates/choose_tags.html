@@ -1,0 +1,41 @@
+{% extends "layout.html"%}
+
+
+{%block body%}
+
+{{ mail}}
+
+<a href="{{ url_for('main_page') }}" ><button type="submit" >Finish </button></a>
+             
+
+<div align="left">
+
+{% for x in tech%}
+
+            <form name="view" method="POST" action="{{ url_for('choose_tags') }}">
+                <input type="hidden" name="id" value="{{x}}" valuex="view">  
+                <br>
+                <input type="submit" name="sub" value="{{x}}">
+                <br>
+            
+                </form>
+                
+{%endfor%}
+</div>
+<div align="center">
+
+    {% for x in ent%}
+
+    <form name="view" method="POST" action="{{ url_for('choose_tags') }}">
+        <input type="hidden" name="id" value="{{x}}" valuex="view">  
+        <br>
+        <input type="submit" name="sub" value="{{x}}">
+        <br>
+    
+        </form>
+
+        {%endfor%}
+
+</div>
+
+{%endblock%}

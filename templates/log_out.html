@@ -1,0 +1,13 @@
+{% extends "layout.html"%}
+
+{%block body%}
+
+Thank You For Using Being With Us. If you Log Out..Remember you are Always Welcome Back
+
+<form method="POST" action= "{{ url_for('logout') }}">  
+    <input type="submit" name="sub" value="Logout">
+    <input type="submit" name="sub" value="cancel">
+
+</form>
+
+{%endblock%}

@@ -1,0 +1,18 @@
+{% extends "layout.html"%}
+
+{%block body%}
+
+Edit Profile Here
+<form method="POST" action= "{{ url_for('edit_profile') }}"  enctype="multipart/form-data"> 
+    
+    <br>
+    <input type="text" name = "username"  placeholder = "{{inf.username}}"  >
+    <br>
+    <br>
+    <input type="text" name = "username"  placeholder = ""  >
+    <br>
+
+   
+</form>
+
+{%endblock%}
