@@ -110,6 +110,7 @@ mongo = PyMongo(application)
 
 users = mongo.db.users
 link_db = mongo.db.links
+verif = mongo.db.verify_email
 
 def login_required(f):
     @wraps(f)
@@ -356,8 +357,15 @@ def register():
             favs = []
             tags = []
             users.insert_one({"email":email ,'username':username , "password":hashed , 
-                            "profile" : uploa , "favs" : favs , "tags" : tags })
+                            "profile" : uploa , "favs" : favs , "tags" : tags , "verified" :0 })
+            
             if users.find_one({"email":email}):
+                code = random.randint(145346 , 976578)
+                code = str(code)
+                session['login_user'] = email
+                verif.insert_one({"email" : email , "code" : code })
+                #send the code Here
+                
                 return redirect(url_for('complete_regist'))
     return render_template('register.html',form = form)
 
@@ -365,44 +373,55 @@ class complete_regist(Base_form):
     code = StringField("Verification Code" , [validators.InputRequired(message="Please Enter The Code Sent Via Email")])
 
 @application.route('/complete_regist' , methods = ['POST' , 'GET'])
+@csrf.exempt
 def complete_regist():
-    form = complete_regist()
     verif = mongo.db.verify_email
-    user_email = session['veri_user']
+    user_email = session['login_user']
     in_db = verif.find_one({"email" : user_email})
     if request.method == "POST":
         de_code = request.form['code']
         if in_db:
-            code = in_db['code']
-            if "1234" == de_code:
-            #if code == de_code:
-                session['login_user'] = user_email
-                redirect(url_for('main_page'))
+            code = str(in_db['code'])
+            if code == de_code:
+                users.find_one_and_update({"email" : user_email} ,{ '$set' :  {"verified": 1}} )
+                return redirect(url_for('choose_tags'))
             else:
+                print("Wrong Code")
+                time.sleep(2)
                 return redirect(url_for('complete_regist'))
-    
-    return render_template('verif_reg.html' , form = form)
+        else:
+            return redirect(url_for('register'))
+            
+    return render_template('verif_reg.html' , m = user_email)
     
 @application.route('/choose_tags/' , methods = ['POST','GET'])
 @csrf.exempt
 def choose_tags():
+    the_tags = ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
+                    'memes' , 'russia'
+                    ]
     user_email = session['login_user']
     if request.method == "POST":
         aaction = request.form.getlist('tags')
         user_db = mongo.db.users
-        the_tags = ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
-                    'memes' , 'russia'
-                    ]
-        list2 = random.samples(the_tags , 6)
+        
+        list2 = random.sample(the_tags , 6)
         user = user_db.find_one({"email" : user_email})
         if len(aaction) < 5:
             em_tags = user['tags']
             for x in list2:
                 em_tags.append(x)
-        user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
-        return redirect(url_for('choose_favs'))
+            user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
+            return redirect(url_for('choose_favs'))
+        else:
+            em_tags = user['tags']
+            for y in aaction:
+                em_tags.append(y)
+            user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
+            return redirect(url_for('choose_favs' ))
             
-    return render_template('choose_tags.html')
+            
+    return render_template('choose_tags.html' , tags = the_tags)
 
 @application.route('/choose_favs/' , methods = ['POST','GET'])
 def choose_favs():
@@ -419,12 +438,29 @@ def choose_favs():
         one = x
         if one in ok:
             f.append(k)
-    em_posts = link_db.find
-    
-    related = link_db.find({"tags" : "tag"})
-    
-    
-    
+    if len(k) > 5:
+        for ps in f:
+            x = ps
+            owner = x['owner']
+        em_favs.append(owner)
+        user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": em_favs}} )
+        
+    else:
+        favs_tags =   ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
+                    'memes' , 'russia'
+                    ]
+        f = []
+    for k in all_posts:
+            ok = k['tags']
+    for x in favs_tags:
+        one = x
+        if one in ok:
+            f.append(k)
+    for ps in f:
+        x = ps
+        owner = x['owner']
+    em_favs.append(owner)
+    user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": em_favs}} )
     return render_template('choose_favs.html')
 
 @application.route('/main_page/' , methods = ['POST','GET'])
@@ -445,7 +481,8 @@ def main_page():
         count = 1
     for x in favs:         
         user = x
-        documentz = list(link_db.find({"owner" : user }).limit(count))
+        documentz = link_db.find({"owner" : user }).limit(count)
+        list(documentz)
         fav_arr.extend(documentz)        
     render_array.extend(fav_arr)
 
@@ -455,7 +492,8 @@ def main_page():
         indiv_tags  = y
         #relevant = trending_db.find({"tags" : tags})
         arr1 = []
-        all_posts= list(link_db.find({}))
+        all_posts= link_db.find({})
+        list(all_posts)
         for x in all_posts:
             tags = x['tags']
             if indiv_tags in tags:
@@ -836,28 +874,6 @@ def post():
                             "post_pic" : uploa })
         return redirect(url_for('main_page'))
     return render_template('post.html' , main_class = main_class , tech = tech)
-
-
-
-@application.route('/choose_tags/' , methods = ['POST','GET'])
-@csrf.exempt
-def choose_tags():
-    user_email = session['login_user']
-    if request.method == "POST":
-        aaction = request.form['sub']
-        user_db = mongo.db.users
-        user = user_db.find_one({"email" : user_email})
-        em_tags = user['tags']
-        em_tags.append(aaction)
-        user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
-      
-      
-    return render_template('choose_tags.html' , mail = user_email , mains = main_class,
-                           tech =  tech , ent = enta, mains2 = [tech,enta,sports,buss_invest,rel_life_style,agric_green , health_nutr_agric,mortage_property],
-                           
-                           
-                           )
-
 
     
 if __name__ == "__main__":
