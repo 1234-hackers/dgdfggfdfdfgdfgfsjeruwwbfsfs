@@ -430,7 +430,7 @@ def choose_favs():
     user = user_db.find_one({"email" : user_email})
     em_favs = user['favs']
     favs_tags = user['tags']
-    all_posts= list(link_db.find({})).limit(1000)
+    all_posts= list(link_db.find()).limit(1000)
     f = []
     for k in all_posts:
             ok = k['tags']
@@ -467,6 +467,7 @@ def choose_favs():
 @csrf.exempt
 def main_page():
     link_db = mongo.db.links
+    em = link_db.find()
     user = mongo.db.users
     trending_db = mongo.db.trending
     render_array = []
@@ -475,14 +476,14 @@ def main_page():
     the_user = users.find_one({"email" : user_email})
     favs = the_user["favs"]
     fav_arr = []
-    if len(favs) <10:
-        count = 2
+    if len(favs) <15:
+        count = 3
     else:
-        count = 1
+        count = 2
     for x in favs:         
         user = x
         documentz = link_db.find({"owner" : user }).limit(count)
-        list(documentz)
+        #list(documentz)
         fav_arr.extend(documentz)        
     render_array.extend(fav_arr)
 
@@ -492,16 +493,14 @@ def main_page():
         indiv_tags  = y
         #relevant = trending_db.find({"tags" : tags})
         arr1 = []
-        all_posts= link_db.find({})
-        list(all_posts)
+        all_posts= link_db.find({}).limit(300)
         for x in all_posts:
             tags = x['tags']
             if indiv_tags in tags:
                 if not  x in render_array: 
                     arr1.append(x)        
-        render_array.extend(arr1)
+    render_array.extend(arr1)
         
-        #like and comment methods
     #view link functionality
     if request.method == "POST":
         the_id = request.form['id']
@@ -516,45 +515,34 @@ def main_page():
             clicker = session['login_user']
             if clicker in likes:
                 likes.remove(clicker)
-                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes}} )
+                total_likes = len(likes)
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes }} )
                 b_color = "red"
             else:
                 likes.append(clicker) 
+                total_likes = len(likes)
                 link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes}} )
-                b_color = "less" 
-                
-        if request.form['sub'] == "Comment":
-            the_post = link_db.find_one({"post_id" : the_id})
-            comments = the_post['comments']
-            
-              
-            
-    return render_template('main.html' , arr = render_array , email = user_email)
+                b_color = "less"       
+    return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email)
 
 @application.route('/profile/' , methods = ['POST','GET'])  
 @csrf.exempt
 def profile():
+    trend = mongo.db.trending
     me = session['login_user']
     the_arr = ["electric car" , "rap" , "football"]
     acc = users.find_one({"email" : me})
     favs = acc['favs']
     tags = acc['tags']
     user = acc['username']
-    profile_pic = acc['profile']
-    name = me
-    new_name2 = "/" +  name
-    new_name = name
-    os.mkdir(upload_folder  + new_name2)
-    my_folder = upload_folder + new_name2
-    filename = new_name + ".jpg"
-    def create_image():
-        decodeit = open(my_folder + "/" + new_name + ".jpg", 'wb')
-        image_folder = os.path.join(my_folder ,  filename )
-        decodeit.write(base64.b64decode((profile_pic)))
-        decodeit.close()
-    create_image()        
-    imga = str(my_folder + "/"+ filename)
-    
+    minez = []
+    my_posts = link_db.find({"owner" : me})
+    more_posts = link_db.find({}).limit(5)
+    def try_exixt():
+        if os.path.exists("static/images/" + me +"/" + me +".png"):
+            prof_pic = "static/images/" + me +"/" + me +".png"     
+        else:
+            prof_pic = "static/images/default.png"
     if request.method == " POST":
         tag = request.form['sub']
         tag = tag.lower()
@@ -567,7 +555,7 @@ def profile():
             #users.find_one_and_update({"email" : me} ,{ '$set' :  {"on_tags" : the_arr}})      
             return redirect(url_for('post_on_tags' , arr = the_arr , tag = tag))
     
-    return render_template('profile.html' , me = me , favs = favs , tags = tags)
+    return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez , more = more_posts)
 
 @application.route('/post_on_tags/' , methods = ['POST','GET'])
 @csrf.exempt
@@ -578,22 +566,42 @@ def post_on_tags():
 @application.route('/view_link/' , methods = ['POST','GET'])
 @csrf.exempt
 def view_link():
+    link_db = mongo.db.links
+    user = mongo.db.users
+    user_email = session['login_user']
+    the_user = users.find_one({"email" : user_email})
+    de_name = the_user['username']
+    if request.method == "POST":
+        the_id = request.form['id']
+        words = request.form['comm']
+        if request.form['sub'] == "Comment":
+                the_post = link_db.find_one({"post_id" : the_id})
+                comments = the_post['comments']
+                commentz = {de_name : words}
+                comments.append(commentz)
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"comments": comments}} )
+        
+    
     link = session['linky']
     link_db = mongo.db.links
     render_arr = []
-    all_posts = list(link_db.find({}))
+    all_posts = link_db.find()
     post_in = link_db.find({"post_id" : link})
     post_in_2 =  link_db.find_one({"post_id" : link})
     post_tags = post_in_2['tags']
-    for k in post_tags:
-        em_tags = k
-        for x  in all_posts:
+    for y in post_tags:
+        indiv_tags  = y
+        #relevant = trending_db.find({"tags" : tags})
+        arr1 = []
+        all_posts= link_db.find({}).limit(500)
+        for x in all_posts:
             tags = x['tags']
-            if em_tags in tags:
-                if x in render_arr:
-                    pass
-                else:
-                    render_arr.append(x)
+            if indiv_tags in tags: 
+                arr1.append(x)        
+    render_arr.extend(arr1)
+    if len(render_arr) < 500:
+        random_psts = all_posts = link_db.find().limit(10)
+        render_arr.extend(random_psts)
     return render_template('view_link.html' , taged = render_arr ,  item = post_in , link = link)
 
 @application.route('/advert/' , methods = ['POST','GET'])
@@ -786,94 +794,34 @@ mortage_property = [
 
 @application.route('/post/' , methods = ['POST','GET'])
 @csrf.exempt
-def post():
-    
-   
-    
+def post(): 
     if request.method == "POST":
             
         link_db = mongo.db.links
         
-        post_class = request.form.get('post_class')
+        title = request.form['title']
         
-         
         desc = request.form['desc']
         
         link = request.form['link']
-        
-        title = request.form['title']
-        
+
         post_id = md5_crypt.hash(title)
-        
-        sec1  = request.form['sec1']
-        
-        sec2 = request.form['sec2']
-        
-        pic = request.files['img']
-        
-       # sec3 = request.form['sec3']
-        
-        sec_arr = []
-        
-        if not sec1 == "" and not  len(sec1) >100 and  not sec1 in sec_arr and not len(sec1) < 0:
-                
-            sec_arr.append(sec1)
-            
-        if not sec2 == "" and not len(sec2) >100 and not sec2 in sec_arr and not len(sec1) < 0 :
-            
-            sec_arr.append(sec2)
-            
-       # if not sec3 == "" and len(sec3) >100 and sec3 in sec_arr:
-            
-            #sec_arr.applicationend(sec3)
             
         tag1 = request.form['tag1']
         
         tag2 = request.form['tag2']
-    
-       # tag3 = request.form['tag3']
-        
-       # tag4 = request.form['tag4']
-        
-        #tag5 = request.form['tag5']
-       
-        
+
         tag_arr = []
         
         tag_arr.append(tag1)
         tag_arr.append(tag2)
-        
-      
-        #if not tag3 == "" and len(tag3) >15 and tag3 in tag_arr:
-            
-         #   tag_arr.applicationend(tag3)
-            
-        #if not tag4 == "" and len(tag4) >15 and tag4 in tag_arr:
-            
-         #   tag_arr.applicationend(tag4)
-        
-        #if not tag5 == "" and len(tag5) >15 and tag5 in tag_arr:
-            
-            #tag_arr.applicationend(tag5)
         owner = session['login_user']
         like_arr = [owner]
         comments = []
-        filename = secure_filename(pic.filename)
-        def allowed_file(filename):
-            return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-            
-        if allowed_file(filename):
-            pic.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
-            image = upload_folder +  "/" + filename
-            with open(image , "rb") as image2string:
-                converted_string = base64.b64encode(image2string.read())
-                uploa = converted_string.decode('utf-8')
-        
-        link_db.insert_one({"owner" : owner , "link" : link , "secondary" : sec_arr, "likes" : like_arr , "comments" : comments ,
-                            "tags" : tag_arr , "title" : title , "description" : desc , "class" : post_class , "post_id" : post_id ,
-                            "post_pic" : uploa })
+        link_db.insert_one({"owner" : owner , "link" : link ,  "likes" : like_arr , "comments" : comments ,
+                            "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id })
         return redirect(url_for('main_page'))
-    return render_template('post.html' , main_class = main_class , tech = tech)
+    return render_template('post.html')
 
     
 if __name__ == "__main__":

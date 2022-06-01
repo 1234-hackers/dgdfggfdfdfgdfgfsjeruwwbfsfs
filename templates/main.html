@@ -12,6 +12,12 @@
 <h2>
 Posts Are Here
 <div align="center">
+    <script>
+        if ( window.history.replaceState ) {
+            window.history.replaceState( null, null, window.location.href );
+          }
+    </script>
+
 </h2>
 
 {% for x in arr%}
@@ -19,27 +25,21 @@ Posts Are Here
 <h3> Owner </h3>{{ x.owner }}
 <br>
 <br>
+{{ x.description }}
+<br>
 <h2>
     Link 
 </h2>
 {{ x.link }}
 <br>
 <br>
+{{x.total_likes}}
 <h2>
-    Secondary Links
-</h2>
-    {% for y in x.secondary %}
-    {{ y }}
-   
-    {%endfor%}
-    <br>
-    <br>
-   
-
+  
     <form name="view" method="POST" action="{{ url_for('main_page') }}">
         <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
         <input type="submit" name="sub" value="View Link">
-        <input type="submit" name="sub" value="Like">
+        <input type="button" name="sub" value="Like">
     
         </form>
         

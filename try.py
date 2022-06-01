@@ -1,3 +1,6 @@
+import os
+
+
 def big():
     strin = "hidfhfhghfghjgfjghkghkhjlhjlhjlgfhgfkdfhfkdtjgfhcvbmcfgbv,ndghhjmdfgnnmb h dgmgmbvcvnmbh,mdfbhdmhfmdxfncgnfsngfndfgfnhfdndg"
 
@@ -38,8 +41,7 @@ main_class = [
         "Health And Nutrition" ,
         "Agriculture and Food Security",
         "Sports"
-        "Entertainment"
-        
+        "Entertainm",
     ]
 def fors():
     num = 1
@@ -88,5 +90,28 @@ def listes():
     
    
     
-listes()
+#listes()
 
+def yeah():
+    n =["q" ,"e"]
+    x = "q"
+    if "q" == x:
+        if "q" not in n:
+            print ("done")
+        else:
+            print("else")
+    
+#yeah()
+
+def try_exixt():
+    if os.path.exists("templates/mrdgdfgain.html"):
+        print("Hell yea")
+    else:
+        print('Done')
+#try_exixt()
+from PIL import Image
+def images():
+    img = Image.open("s.jpg")
+    img.save("Image.png")
+images()
+    

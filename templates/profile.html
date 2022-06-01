@@ -26,8 +26,6 @@
     <form name="view" method="POST" action="{{ url_for('profile') }}">
        <input type="hidden" name="the_tag" value="{{x}}">
        
-       <button type="submit"> View</button>
-
        <button type="submit">   <a href="{{ url_for('post_on_tags') }}"> {{x}}</a> </button>
     </form>
 </li>
@@ -43,7 +41,25 @@
 
         {{y}}  
 {% endfor %}
+
+
+
 </div>
+
+<div align="center">
+    {% for v in more %}
+    {{v.owner}}
+    <br>
+    {{v.title}}
+    <br>
+    {{v.description}}
+    <br>
+    <br>
+
+{%endfor%}
+<br>
+<br>
+    </div>
 
 
 {{me}}

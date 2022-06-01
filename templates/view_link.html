@@ -3,6 +3,13 @@
 
 <div id="head" align = "center">
     <a href="{{ url_for('main_page') }}"> Back Home</a>.
+
+    <script>
+        if ( window.history.replaceState ) {
+            window.history.replaceState( null, null, window.location.href );
+          }
+    </script>
+    {{to_do}}
     
 <h3>
     {% for x in item%}
@@ -14,17 +21,32 @@
     </h2> {{  x.owner }}
         <br>
         <br>
-
-        Link Class <br> {{ x.class }}
-        <br>
-        <br>
         Main Link <br> {{  x.link }}
         <br>
         <br>
         Description ::::> {{x.description}}
+        <br>
+        <br>
+        {%for n in x.comments%}
+        {% for key, value in n.items() %}
+{{key}}
+{{value}}
+{%endfor%}
+{%endfor%}
+        
+        <form name="view" method="POST" action="{{ url_for('view_link') }}">
+            <input type="hidden" name="id" value="{{x.post_id}}" valuex="view"> 
+            <input type="text" name ="comm" placeholder = "Comment" > 
+            <input type="submit" name="sub" value="Comment">
+        
+            </form>
 
 
     {%endfor%}
+
+    <h2> 
+        More  Posts
+    </h2>
     
     {%for y in taged%}
     <br>
@@ -32,10 +54,13 @@
     {{y.owner}}
     <br>
     <br>
-    {{y.link}}
-    <br>
-    <br>
+  
     {{y.description}}
+    <br>
+    <br>
+    {{y.link}}
+   
+    <hr>
         {%endfor%}
 
 </h3>
