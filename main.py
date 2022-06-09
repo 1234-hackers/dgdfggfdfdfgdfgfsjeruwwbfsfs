@@ -10,7 +10,7 @@ import passlib
 from passlib.context import CryptContext
 from passlib.hash import bcrypt_sha256,argon2,ldap_salted_md5,md5_crypt
 import time
-from datetime import timedelta
+from datetime import timedelta , datetime
 import smtplib
 from email.message import EmailMessage
 import socket,os
@@ -181,51 +181,51 @@ def reset_session_required(f):
 @application.route('/reset_pass/', methods = ['POST','GET'])
 @csrf.exempt
 def  reset_pass():
+    reset_db = mongo.db.pass_reset
+    code = random.randint(145346 , 976578)
+    code = str(code)
     if request.method == "POST":
         email = request.form['email']
-        reset_db = mongo.db.pass_reset
-        
-        code = random.randint(145346 , 976578)
-        code = str(code)
-        
         existing = users.find_one({'email':email} )
-        
         if existing:
-            mess = Message( "Hi Password Reset Request" , recipients = [email])
-            messo = "Hi Password Reset Request"
-            mess.html =  render_template("email_template.html" , code = code , mes = messo)
-            #Post_guy.send(mess)
-            r_now = time.time()
+            '''
+            Send message here with the code
+            '''
+            now = datetime.now()
+            r_now =  now.strftime("Date  %Y:%m:%d: Time %H:%M:%S")
+            session['rset'] = email
             reset_db.insert_one({"email" : email , "code" : code , "time_in" : r_now})
-            return redirect(url_for("enter_code" , email = email))
-            
+            return redirect(url_for("enter_code"))      
         else:
             return redirect(url_for('register'))
     return render_template('reset_pass.html')
-
 @application.route('/enter_code/' , methods = ['POST','GET'])
 @csrf.exempt
-def enter_code(email = "jacksonmuta123@gmail.com"):
-    if request.method == "POST":
-        reset_db = mongo.db.reset_pass
-        code = request.form['code']
-        mailed = email
-        legit = reset_db.find_one({"email" : email})
-        if legit:
-            legit_code = legit["code"]
-            now = time.time()
-            req_time = legit['time_in']
-            diff = now - req_time
-            if code == legit_code and diff < 10:
-                  return redirect(url_for('new_pass' , email = mailed))
-                
-            if diff > 10:
-                return redirect(url_for('reset_pass' ))
-        else:
-            return redirect(url_for('register'))
-        
+def enter_code():
+    email = session['rset']
+    if email in session:
+        if request.method == "POST":
+            reset_db = mongo.db.pass_reset
+            code = request.form['code']
+            mailed = email
+            legit = reset_db.find_one({"email" : email})
+            if legit:
+                legit_code = legit["code"]
+                now = datetime.now()
+                now = now.strftime("Date  %Y:%m:%d: Time %H:%M:%S")
+                req_time = legit['time_in']
+                diff = now - req_time
+                if code == legit_code and diff < 7:
+                    return redirect(url_for('new_pass'))  
+                if diff > 7:
+                    return redirect(url_for('reset_pass' ))
+            else:
+                return redirect(url_for('reset_pass'))
+    else:
+        return redirect(url_for('reset_pass'))
+            
     return render_template('enter_code.html')
-
+     
 class New_pass(Base_form):
       
         pass1 = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")]) 
@@ -240,23 +240,22 @@ def new_pass(email):
     form = New_pass()
     if request.method == "POST" and form.validate():
         users = mongo.db.users
-        
-        target_account = email
-        
-        
+        target_account = session['rset'] 
         pass1 = form.pass1.data
-        
         pass2 = form.pass2.data
-        
-        
         if pass1 == pass2 and len(pass2) > 8 and len(pass2) < 15 :
-            
             passcode = Hash_passcode.hash(pass2)
-            
             the_user = users.find_one({"email" : email})
-             
             users.find_one_and_update({"email" :target_account} , { 'set' : {"password" : passcode} })
+            session['login_user'] = target_account
+            return redirect(url_for('main'))
+        else:
+            check_pass = " Please Check The Password And Try Again"
+            return render_template('new_pass.html' , form = form , mess = check_pass)
+            
     return render_template('new_pass.html' , form = form)
+
+
 class Base_form(FlaskForm):
     
     class Meta:
@@ -465,6 +464,7 @@ def choose_favs():
 
 @application.route('/main_page/' , methods = ['POST','GET'])
 @csrf.exempt
+@login_required
 def main_page():
     link_db = mongo.db.links
     em = link_db.find()
@@ -544,24 +544,33 @@ def profile():
         else:
             prof_pic = "static/images/default.png"
     if request.method == " POST":
-        tag = request.form['sub']
-        tag = tag.lower()
-        all_posts= list(link_db.find({})).limit(1000)
-        for x in all_posts:
-            tags = x['tags']
-            if tag in tags:
-                the_arr.append(x)
-                
-            #users.find_one_and_update({"email" : me} ,{ '$set' :  {"on_tags" : the_arr}})      
-            return redirect(url_for('post_on_tags' , arr = the_arr , tag = tag))
-    
+        the_id = request.form['id']
+        if request.form['sub'] == the_id: 
+            session["le"] = the_id
+            return redirect(url_for('post_on_tags' ))         
     return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez , more = more_posts)
+
+@application.route('/edit_profile/' ,methods = ['POST','GET'])
+@csrf.exempt
+def edit_profile():
+    user = mongo.db.users
+    user_email = session['login_user']
+    info = user.find({"email" : user_email})
+    if request.method == "POST":
+        name = request.form['username']
+    return render_template('edit_profile.html' , inf = info)
+
+
+
+
 
 @application.route('/post_on_tags/' , methods = ['POST','GET'])
 @csrf.exempt
+@login_required
 def post_on_tags():
     
-    
+    tag = session['le']
+   
     return render_template('post_on_tags.html')
 @application.route('/view_link/' , methods = ['POST','GET'])
 @csrf.exempt
@@ -823,6 +832,86 @@ def post():
         return redirect(url_for('main_page'))
     return render_template('post.html')
 
+
+@application.route('/my_post/' , methods = ['POST','GET'])
+def my_post():
+    me =  session['login_user']
+    
+    my_post = link_db.find({"owner" : me})
+    
+    if request.method == "POST":
+        if request.form['sub'] == "Edit":
+            id = request.form['the_id']
+            session['post_edit'] = id
+            
+        if request.form['sub'] == "Delete":
+            id = request.form['the_id']
+            link_db.find_one_and_delete({"post_id" : id})
+            return render_template('my_post.html' , posts = my_post)
+            
+        if request.form['sub'] == "Promote":
+            id = request.form['the_id']
+            session.pop('post_edit' , None) 
+            session['post_edit'] = id
+            return redirect(url_for('promote'))
+        
+
+    return render_template('my_post.html' , posts = my_post)
+
+@application.route('/promote/' , methods = ['POST','GET'])
+def promote():
+    the_post =  session['post_edit']
+    post = link_db.find_one({"post_id" : the_post})
+    new_tags = []
+    older_tags = post['tags']
+    if request.method == "POST":
+        tag1 = request.form['tag1']
+        tag2 = request.form['tag2']
+        tag3 = request.form['tag3']
+        tag4 = request.form['tag4']
+        tag5 = request.form['tag5']
+        
+        if not tag1 =="":
+            new_tags.append(tag1)
+        if not tag1 =="":
+            new_tags.append(tag2)
+        if not tag1 =="":
+            new_tags.append(tag3)
+        if not tag1 =="":
+            new_tags.append(tag4)
+        if not tag1 =="":
+            new_tags.append(tag5)
+        new_tags.extend(older_tags)
+        
+        plan = request.form.get("plan")
+        if plan == "2":
+            the_plain = "five_dollar" # up to 600 views
+        if plan == "3":
+            the_plan  = "12_dollar" #up to 1500 views
+        if plan == "4":
+            the_plain = "fifty_dollar" # up to 8000 views
+            
+        if plan == "5":
+            the_plain = "24 hrs"
+        if plan == "6":
+            the_plan  = "72 hrs"
+        if plan == "7":
+            the_plain = "1 Week"
+            
+        target_reg = request.form.get("target_reg")
+        ad_view = []
+        link_db.find_one_and_update({'post_id' : the_post} , {'set' : {'tags' : new_tags , 'region' : target_reg , 'ad_view' : ad_view}})
+            
+    return render_template('promote.html')
+
+
+@application.route('/edit_post/' ,methods = ['POST','GET'])
+def edit_post():
+    
+    
+    return render_template('adit_post.html')
+    
+    
     
 if __name__ == "__main__":
     application.secret_key = "Fuckoffmen"

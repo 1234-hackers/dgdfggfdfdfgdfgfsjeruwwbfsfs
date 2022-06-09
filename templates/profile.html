@@ -23,11 +23,11 @@
 {%for x in tags%}
 <ul>
     <li>
-    <form name="view" method="POST" action="{{ url_for('profile') }}">
-       <input type="hidden" name="the_tag" value="{{x}}">
-       
-       <button type="submit">   <a href="{{ url_for('post_on_tags') }}"> {{x}}</a> </button>
-    </form>
+        <form name="view" method="POST" action="{{ url_for('profile') }}">
+            <input type="hidden" name="id" value="{{x}}" valuex="view">  
+            <input type="submit" name="sub" value="{{x}}" >
+        
+            </form>
 </li>
 </ul>
     {% endfor %}

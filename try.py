@@ -1,5 +1,7 @@
 import os
 
+from datetime import timedelta , datetime
+
 
 def big():
     strin = "hidfhfhghfghjgfjghkghkhjlhjlhjlgfhgfkdfhfkdtjgfhcvbmcfgbv,ndghhjmdfgnnmb h dgmgmbvcvnmbh,mdfbhdmhfmdxfncgnfsngfndfgfnhfdndg"
@@ -113,5 +115,36 @@ from PIL import Image
 def images():
     img = Image.open("s.jpg")
     img.save("Image.png")
-images()
+#images()
+
+def r():
+        new_tags = []
+        tag1 = "jack"
+        tag2 = ""
+        tag3 = "request.form['tag3']"
+        tag4 = "request.form['tag4']"
+        tag5 = "request.form['tag5']"
+        
+        for x in range(1,6):
+            if not "tag" + str(x) =="":
+                new_tags.append("tag" + str(x))
+                
+          
+        for v in new_tags:
+            if not v == "":
+                tag1 = "jack"
+                tag2 = ""
+                tag3 = "request.form['tag3']"
+                tag4 = "request.form['tag4']"
+                tag5 = "request.form['tag5']"
+                
+                print(v)     
+        print(new_tags)
+#r()
+
+def time_dif():
+    now = datetime.now()
+    now_c = now.strftime("Date  %Y:%m:%d: Time %H:%M:%S")
+    print(now)
     
+time_dif()
