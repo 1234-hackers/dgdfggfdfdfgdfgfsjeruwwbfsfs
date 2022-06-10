@@ -429,7 +429,7 @@ def choose_favs():
     user = user_db.find_one({"email" : user_email})
     em_favs = user['favs']
     favs_tags = user['tags']
-    all_posts= list(link_db.find()).limit(1000)
+    all_posts= link_db.find()
     f = []
     for k in all_posts:
             ok = k['tags']
@@ -437,11 +437,12 @@ def choose_favs():
         one = x
         if one in ok:
             f.append(k)
-    if len(k) > 5:
+    if len(f) > 2:
         for ps in f:
             x = ps
             owner = x['owner']
-        em_favs.append(owner)
+            return print(f)
+            em_favs.append(owner)
         user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": em_favs}} )
         
     else:
@@ -628,11 +629,11 @@ def advert():
         if plan == "1":
             the_plan = "two_dollar"
         if plan == "2":
-            the_plain = "five_dollar"
+            plan = "five_dollar"
         if plan == "3":
             the_plan  = "12_dollar"
         if plan == "4":
-            the_plain = "fifty_dollar"
+            plan = "fifty_dollar"
         
         filename = secure_filename(pic.filename)
         def allowed_file(filename):
@@ -644,7 +645,7 @@ def advert():
                 converted_string = base64.b64encode(image2string.read())
                 uploa = converted_string.decode('utf-8')        
         advert_db.insert_one({"title" : title , "desc" : description , "ad_pic" : uploa , 
-                             "plan" : the_plain })        
+                             "plan" : plan })        
     
     return render_template('advert.html')
 @application.route('/mpesa/' , methods = ['POST','GET'])
@@ -834,6 +835,7 @@ def post():
 
 
 @application.route('/my_post/' , methods = ['POST','GET'])
+@csrf.exempt
 def my_post():
     me =  session['login_user']
     
@@ -843,6 +845,7 @@ def my_post():
         if request.form['sub'] == "Edit":
             id = request.form['the_id']
             session['post_edit'] = id
+            return redirect(url_for('edit_post'))
             
         if request.form['sub'] == "Delete":
             id = request.form['the_id']
@@ -850,8 +853,7 @@ def my_post():
             return render_template('my_post.html' , posts = my_post)
             
         if request.form['sub'] == "Promote":
-            id = request.form['the_id']
-            session.pop('post_edit' , None) 
+            id = request.form['the_id']    
             session['post_edit'] = id
             return redirect(url_for('promote'))
         
@@ -885,31 +887,67 @@ def promote():
         
         plan = request.form.get("plan")
         if plan == "2":
-            the_plain = "five_dollar" # up to 600 views
+            plan = "five_dollar" # up to 600 views
+            max = 600
+            min = 550
         if plan == "3":
             the_plan  = "12_dollar" #up to 1500 views
+            max = 1650
+            min = 1300
         if plan == "4":
-            the_plain = "fifty_dollar" # up to 8000 views
+            plan = "fifty_dollar" # up to 8000 views
+            max = 9000
+            min = 7500
             
         if plan == "5":
-            the_plain = "24 hrs"
+            plan = "24 hrs"
+            max = 1400
+            min = 1300
+            cost = 10
         if plan == "6":
             the_plan  = "72 hrs"
+            max = 5100
+            min =  4800
+            cost = 32 
         if plan == "7":
-            the_plain = "1 Week"
-            
+            plan = "1 Week"
+            max = 12800
+            min = 12000
+            cost = 70
         target_reg = request.form.get("target_reg")
+        if  target_reg =="11":
+            reg = "U.S.A and Canada"
+        if  target_reg =="12":
+            reg ="Europe"
+        if  target_reg =="13":
+            reg = "Africa"
+        if  target_reg =="14":
+            reg = "Asia"
+        if  target_reg =="15":
+            reg = "Australia"
+        if  target_reg =="16":
+            reg = "South America"
+        if  target_reg =="17":
+            reg = "Global"
         ad_view = []
-        link_db.find_one_and_update({'post_id' : the_post} , {'set' : {'tags' : new_tags , 'region' : target_reg , 'ad_view' : ad_view}})
-            
-    return render_template('promote.html')
+        # payment must be done to continue with the rest of the process
+        
+        pay = "jk"
+        payment = "jk"
+        if payment == pay:
+            link_db.find_one_and_update({'post_id' : the_post} , {'set' : {'tags' : new_tags , 'region' : reg ,
+                                    'ad_view' : ad_view , 'plan' : plan , "max" : max, "min" : min}})
+        else:
+            return redirect(url_for('promote'))      
+     
+    return render_template('promote.html' , post = the_post)
 
 
 @application.route('/edit_post/' ,methods = ['POST','GET'])
 def edit_post():
     
     
-    return render_template('adit_post.html')
+    return render_template('edit_post.html')
     
     
     
