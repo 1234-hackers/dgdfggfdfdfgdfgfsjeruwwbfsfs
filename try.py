@@ -147,4 +147,31 @@ def time_dif():
     now_c = now.strftime("Date  %Y:%m:%d: Time %H:%M:%S")
     print(now)
     
-time_dif()
+#time_dif()
+def forc():
+    new = []
+    x = [ ["v" ,"h" ,"f" ,"t"] ,['f' , 't']]
+    for v in x:
+        if "h" in v:
+            new.append(v)
+    
+    print(new)
+    print(len(x))
+#forc()
+def apz():
+    names = ['music' , 'sports' , 'crypto' ,'technology']
+    
+    names.append('date')
+    
+    print(names)
+#apz()
+
+def stru():
+    name = "jamesbutton"
+    if "james" in name:
+        print("yega")
+    else:
+        print("no")
+
+stru()            
+            

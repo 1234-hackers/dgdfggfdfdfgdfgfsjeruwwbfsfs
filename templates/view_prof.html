@@ -1,0 +1,28 @@
+{% extends "layout.html"%}
+
+{%block body%}
+
+<div align="center">     
+<img src = "{{prof}}">
+
+<div id = "prof"  align = "center">
+</div>
+</div>
+<div align="center">
+    {% for v in usr %}
+    {{v.username}}
+    {{v.email}}
+    <form name="view" method="POST" action="{{ url_for('view_prof') }}">
+        <input type="hidden" name="id" value="{{v.email}}" valuex="view">  
+        <input type="submit" name="subz" value="{{state}}">
+        
+    
+        </form>
+    {%endfor%}
+<br>
+<br>
+    </div>
+
+
+{{me}}
+{%endblock%}

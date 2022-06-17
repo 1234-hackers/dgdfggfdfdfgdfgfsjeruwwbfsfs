@@ -1,5 +1,6 @@
 import base64
 from email import message
+from turtle import st
 from dns.message import Message
 from flask import Flask, render_template, url_for, request, redirect,flash,session
 from flask.scaffold import F
@@ -383,6 +384,7 @@ def complete_regist():
             code = str(in_db['code'])
             if code == de_code:
                 users.find_one_and_update({"email" : user_email} ,{ '$set' :  {"verified": 1}} )
+                verif.find_one_and_delete({'email' : user_email})
                 return redirect(url_for('choose_tags'))
             else:
                 print("Wrong Code")
@@ -417,7 +419,7 @@ def choose_tags():
             for y in aaction:
                 em_tags.append(y)
             user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
-            return redirect(url_for('choose_favs' ))
+            return redirect(url_for('main_page' ))
             
             
     return render_template('choose_tags.html' , tags = the_tags)
@@ -433,34 +435,36 @@ def choose_favs():
     f = []
     for k in all_posts:
             ok = k['tags']
-    for x in favs_tags:
-        one = x
-        if one in ok:
-            f.append(k)
-    if len(f) > 2:
-        for ps in f:
-            x = ps
-            owner = x['owner']
-            return print(f)
-            em_favs.append(owner)
+            for x in favs_tags:
+                one = x
+                if one in ok:
+                    f.append(k)
+    for ps in f:
+        owner = ps['owner']
+        em_favs.append(owner)
         user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": em_favs}} )
         
-    else:
-        favs_tags =   ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
+    
+    favs_tags =   ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
                     'memes' , 'russia'
                     ]
-        f = []
+    f = []
     for k in all_posts:
             ok = k['tags']
-    for x in favs_tags:
-        one = x
-        if one in ok:
-            f.append(k)
+            for x in favs_tags:
+                one = x
+                if one in ok:
+                    f.append(k)
     for ps in f:
-        x = ps
-        owner = x['owner']
-    em_favs.append(owner)
-    user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": em_favs}} )
+        owner = ps['owner']
+        e_favs = []
+        e_favs.append(owner)
+    new_favs = user['favs']
+    
+    for t in new_favs:
+        if t in e_favs:
+            e_favs.remove(t)
+            user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": e_favs}} )
     return render_template('choose_favs.html')
 
 @application.route('/main_page/' , methods = ['POST','GET'])
@@ -508,6 +512,17 @@ def main_page():
         if request.form['sub'] == "View Link": 
             session["linky"] = the_id
             return redirect(url_for('view_link' ))
+        
+        if request.form['sub'] == "Follow":
+            the_id = request.form['id']
+            owner_d =  link_db.find_one({"post_id" : the_id})
+            owner = owner_d['owner']
+            cl = session['login_user']
+            folloin = users.find_one({'email' :cl})
+            f = folloin['favs']
+            if not owner in f:
+                f.append(owner)
+                users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
                 
         if request.form['sub'] == "Like":
             the_post = link_db.find_one({"post_id" : the_id})
@@ -517,14 +532,84 @@ def main_page():
             if clicker in likes:
                 likes.remove(clicker)
                 total_likes = len(likes)
-                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes }} )
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes  , 'total_likes' : total_likes }} )
                 b_color = "red"
             else:
                 likes.append(clicker) 
                 total_likes = len(likes)
-                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes}} )
-                b_color = "less"       
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes  , 'total_likes' : total_likes}} )
+                b_color = "less"   
+        #on search
+        if request.form['searc'] == "Search":
+            de_search = request.form['search']
+            if not de_search == "":
+                session['sea'] == de_search
+                return redirect(url_for('view_result'))
+            else:
+                return redirect(url_for("sugges"))         
+                
+        
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email)
+
+@application.route('/view_result/' , methods = ['POST','GET'])
+def view_result():
+    user_email = session['login_user']
+    de_search =  session['sea']
+    finds = de_search.split()
+    to_show = []
+    for x in finds:
+        al = link_db.find()
+        for c in al:
+            emt = c['tags']
+            if x in emt:
+                to_show.append(c)      
+            lks = c['link']
+            de_lin = lks.split()
+            if x in de_lin:
+                to_show.append(c)     
+    de_users = []        
+    all_usr = users.find()
+    for q in all_usr:
+        name = q['username']
+        email = q['email']
+        new_m = email.split('.' , maxsplit = 1 )
+        mai = new_m[0]
+        if name == de_search:
+            de_users.append(q) 
+        if de_search in mai:
+            de_users.append(q)
+            
+    if request.method == "POST":
+        the_id = request.form['id']
+        if request.form['sub'] == "View Link": 
+            session["linky"] = the_id
+            return redirect(url_for('view_link' ))
+               
+        if request.form['sub'] == "Like":
+            the_post = link_db.find_one({"post_id" : the_id})
+            likes= the_post['likes']
+            total_likes = len(likes)
+            clicker = session['login_user']
+            if clicker in likes:
+                likes.remove(clicker)
+                total_likes = len(likes)
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
+                b_color = "red"
+            else:
+                likes.append(clicker) 
+                total_likes = len(likes)
+                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
+        #on peoples form submit
+        if request.form['subz'] == "View Profile":
+            session.pop("de_email" ,None)
+            name = request.form['id']
+            session['de_email'] == name
+            return redirect(url_for('view_prof'))
+
+            
+        return render_template("people.html" , p = de_users)
+    
+    return render_template('view_result.html' , t= to_show)
 
 @application.route('/profile/' , methods = ['POST','GET'])  
 @csrf.exempt
@@ -550,6 +635,37 @@ def profile():
             session["le"] = the_id
             return redirect(url_for('post_on_tags' ))         
     return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez , more = more_posts)
+@application.route('/view_prof/' , methods = ['POST','GET'])
+def view_prof():
+    user = session['de_email']
+    user_email = session['login_user']
+    the_user = users.find_one({"email" :user})
+    mez = user.find_one({'email': user_email})
+    folloin = mez['favs']
+    if user in folloin:
+        state = "Unfollow"
+    else:
+        state = "Follow"
+    if request.method == "POST":
+        if request.form['sub'] == "Follow":
+            the_id = request.form['id']
+            owner_d =  link_db.find_one({"post_id" : the_id})
+            owner = owner_d['owner']
+            cl = session['login_user']
+            folloin = users.find_one({'email' :cl})
+            f = folloin['favs']
+            if not owner in f:
+                f.append(owner)
+                state = "Unfollow"
+                users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+            else:
+                f.remove(owner)
+                state = "Follow"
+                users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+                
+ 
+    return render_template('view_prof.html' , usr = the_user , state = state)
+
 
 @application.route('/edit_profile/' ,methods = ['POST','GET'])
 @csrf.exempt

@@ -1,0 +1,23 @@
+{% extends "layout.html"%}
+
+{%block body%}
+<h2> People Found</h2>
+
+{%for x in p %}
+
+{{x.username}}
+
+<h2>
+  
+    <form name="view" method="POST" action="{{ url_for('view_resault') }}">
+        <input type="hidden" name="id" value="{{x.email}}" valuex="view">  
+        <input type="submit" name="subz" value="View Profile">
+        
+    
+        </form>
+
+{%endfor%}
+
+<h2> Suggested </h2>
+
+{%endblock%}
