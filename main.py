@@ -34,6 +34,11 @@ from werkzeug.utils import secure_filename
 #mpsa imports
 #from flask_mpesa import MpesaAPI
 
+import PIL
+from PIL import Image
+
+import markupsafe
+from markupsafe import escape , Markup
 ip = socket. gethostbyname(socket. gethostname())
 ipst = str(ip)
 application = Flask(__name__)
@@ -343,11 +348,21 @@ def register():
             return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
             
         if allowed_file(filename):
-            pic.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
-            image = upload_folder +  "/" + filename
+            fl = email.replace("." , "")
+            os.mkdir("static/images/" + fl)
+            pt = "static/images/" + fl + "/"
+            des = fl + "/" + filename
+            
+            pic.save("static/images/" + des)
+            image1 = "static/images/" + des
+            image = Image.open(image1)
+            new = image.convert("RGB")
+            new.save(pt + fl + '.jpg')
+            image = pt +fl + ".jpg"
             with open(image , "rb") as image2string:
                 converted_string = base64.b64encode(image2string.read())
                 uploa = converted_string.decode('utf-8')
+            os.remove("static/images/" + fl  + "/" + filename)
         registered = users.find_one({"email":email})
         if registered:
             mess = "You are already registered,please Log in"
@@ -475,21 +490,24 @@ def main_page():
     em = link_db.find()
     user = mongo.db.users
     trending_db = mongo.db.trending
+    randomly = link_db.find().limit(100)
     render_array = []
+    render_array.extend(randomly)
     #based on following people
     user_email = session['login_user']
     the_user = users.find_one({"email" : user_email})
     favs = the_user["favs"]
     fav_arr = []
-    if len(favs) <15:
+    if len(favs) <10:
         count = 3
     else:
         count = 2
     for x in favs:         
         user = x
         documentz = link_db.find({"owner" : user }).limit(count)
-        #list(documentz)
-        fav_arr.extend(documentz)        
+        for kk in documentz:
+            if not kk in render_array:
+                fav_arr.extend(documentz)      
     render_array.extend(fav_arr)
 
     #based on tags
@@ -498,13 +516,15 @@ def main_page():
         indiv_tags  = y
         #relevant = trending_db.find({"tags" : tags})
         arr1 = []
-        all_posts= link_db.find({}).limit(300)
+        all_posts= link_db.find().limit(300)
         for x in all_posts:
             tags = x['tags']
             if indiv_tags in tags:
                 if not  x in render_array: 
                     arr1.append(x)        
     render_array.extend(arr1)
+    random.shuffle(render_array)
+    
         
     #view link functionality
     if request.method == "POST":
@@ -522,7 +542,10 @@ def main_page():
             f = folloin['favs']
             if not owner in f:
                 f.append(owner)
-                users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+                users.find_one_and_update({'email' : user_email} , {'$set' : {'favs' : f}})
+            else:
+                f.remove(owner)
+                users.find_one_and_update({'email' : user_email} , {'$set' : {'favs' : f}})
                 
         if request.form['sub'] == "Like":
             the_post = link_db.find_one({"post_id" : the_id})
@@ -539,83 +562,54 @@ def main_page():
                 total_likes = len(likes)
                 link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes  , 'total_likes' : total_likes}} )
                 b_color = "less"   
-        #on search
-        if request.form['searc'] == "Search":
-            de_search = request.form['search']
-            if not de_search == "":
-                session['sea'] == de_search
-                return redirect(url_for('view_result'))
-            else:
-                return redirect(url_for("sugges"))         
-                
-        
-    return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email)
+                             
+    return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
-@application.route('/view_result/' , methods = ['POST','GET'])
-def view_result():
+@application.route('/view_resault/' , methods = ['POST','GET'])
+def view_resault():
     user_email = session['login_user']
-    de_search =  session['sea']
-    finds = de_search.split()
-    to_show = []
-    for x in finds:
-        al = link_db.find()
-        for c in al:
-            emt = c['tags']
-            if x in emt:
-                to_show.append(c)      
-            lks = c['link']
-            de_lin = lks.split()
-            if x in de_lin:
-                to_show.append(c)     
-    de_users = []        
-    all_usr = users.find()
-    for q in all_usr:
-        name = q['username']
-        email = q['email']
-        new_m = email.split('.' , maxsplit = 1 )
-        mai = new_m[0]
-        if name == de_search:
-            de_users.append(q) 
-        if de_search in mai:
-            de_users.append(q)
-            
+    to_show = [] 
+    people = []
     if request.method == "POST":
-        the_id = request.form['id']
-        if request.form['sub'] == "View Link": 
-            session["linky"] = the_id
-            return redirect(url_for('view_link' ))
-               
-        if request.form['sub'] == "Like":
-            the_post = link_db.find_one({"post_id" : the_id})
-            likes= the_post['likes']
-            total_likes = len(likes)
-            clicker = session['login_user']
-            if clicker in likes:
-                likes.remove(clicker)
-                total_likes = len(likes)
-                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
-                b_color = "red"
-            else:
-                likes.append(clicker) 
-                total_likes = len(likes)
-                link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
-        #on peoples form submit
-        if request.form['subz'] == "View Profile":
-            session.pop("de_email" ,None)
-            name = request.form['id']
-            session['de_email'] == name
-            return redirect(url_for('view_prof'))
-
-            
+        de_search = request.form['de_search']
+        finds = de_search.split()
+        for x in finds:
+            al = link_db.find()
+            for c in al:
+                emt = c['tags']
+                if x in emt:
+                    to_show.append(c)      
+                lks = c['link']
+                de_lin = lks.split()
+                if x in de_lin:
+                    to_show.append(c)     
+        de_users = []        
+        all_usr = users.find()
+        for q in all_usr:
+            name = q['username']
+            email = q['email']
+            new_m = email.split('@' , maxsplit = 1 )
+            mai = new_m[0]
+            if name == de_search:
+                de_users.append(q) 
+            if de_search in mai:
+                de_users.append(q)
+            people.extend(de_users)
+            if request.form['subz'] == "View Profile":
+                session.pop("de_email" ,None)
+                name = request.form['id']
+                session['de_email'] == name
+                return redirect(url_for('view_prof')) 
         return render_template("people.html" , p = de_users)
     
-    return render_template('view_result.html' , t= to_show)
+    return render_template('view_result.html')
 
 @application.route('/profile/' , methods = ['POST','GET'])  
 @csrf.exempt
 def profile():
     trend = mongo.db.trending
     me = session['login_user']
+    me2 = me.replace("." , "")
     the_arr = ["electric car" , "rap" , "football"]
     acc = users.find_one({"email" : me})
     favs = acc['favs']
@@ -624,17 +618,27 @@ def profile():
     minez = []
     my_posts = link_db.find({"owner" : me})
     more_posts = link_db.find({}).limit(5)
-    def try_exixt():
-        if os.path.exists("static/images/" + me +"/" + me +".png"):
-            prof_pic = "static/images/" + me +"/" + me +".png"     
-        else:
-            prof_pic = "static/images/default.png"
+    
+    
+    if os.path.exists("static/images/" + me2 +"/" + me2 +".jpg"):
+        prof_pic = "static/images/" + me2 +"/" + me2 +".jpg" 
+      
+    else:
+        prof_pic = "/static/images/default.jpg"
+    links = []
+    links.append(prof_pic)
+    dez_name = Markup(prof_pic)
+    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
     if request.method == " POST":
         the_id = request.form['id']
         if request.form['sub'] == the_id: 
             session["le"] = the_id
-            return redirect(url_for('post_on_tags' ))         
-    return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez , more = more_posts)
+            return redirect(url_for('post_on_tags' )) 
+                
+    return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez ,
+                           more = more_posts , links = links , prof = dez_name , nn = nnn)
+
+
 @application.route('/view_prof/' , methods = ['POST','GET'])
 def view_prof():
     user = session['de_email']
@@ -955,7 +959,10 @@ def post():
 def my_post():
     me =  session['login_user']
     
-    my_post = link_db.find({"owner" : me})
+    my_posts = list(link_db.find({"owner" : me}))
+    emt = []
+    emt.append(my_post)
+        
     
     if request.method == "POST":
         if request.form['sub'] == "Edit":
@@ -974,7 +981,7 @@ def my_post():
             return redirect(url_for('promote'))
         
 
-    return render_template('my_post.html' , posts = my_post)
+    return render_template('my_post.html' , posts = emt , dude = me)
 
 @application.route('/promote/' , methods = ['POST','GET'])
 def promote():

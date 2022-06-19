@@ -173,5 +173,39 @@ def stru():
     else:
         print("no")
 
-stru()            
+#stru()  
+def eml():
+    em = "jacksonmuta123@gmail.com"        
+    new = em.replace("." , "")
+    os.mkdir("static/" + new)
+    print(new)  
+#eml()   
+
+"""
+ if request.method == "POST":
+            the_id = request.form['id']
+            if request.form['sub'] == "View Link": 
+                session["linky"] = the_id
+                return redirect(url_for('view_link' ))
+                
+            if request.form['sub'] == "Like":
+                the_post = link_db.find_one({"post_id" : the_id})
+                likes= the_post['likes']
+                total_likes = len(likes)
+                clicker = session['login_user']
+                if clicker in likes:
+                    likes.remove(clicker)
+                    total_likes = len(likes)
+                    link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
+                    b_color = "red"
+                else:
+                    likes.append(clicker) 
+                    total_likes = len(likes)
+                    link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
+            #on peoples form submit     
+            # """
             
+email = "jacksonmuta@gmail.com"
+new_m = email.split('.' , maxsplit = 1 )
+new_m2 = email.split('@' , maxsplit = 1 )
+print(new_m2)

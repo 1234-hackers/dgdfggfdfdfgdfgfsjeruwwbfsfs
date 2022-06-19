@@ -7,13 +7,14 @@
 {{v.link}}
 
 <h2>
-  
-    <form name="view" method="POST" action="{{ url_for('view_resault') }}">
-        <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
-        <input type="submit" name="sub" value="View Link">
-        <input type="button" name="sub" value="{{ v.total_likes}} Like">
+    <div align="center">
+        <form name="search" method="POST" action="{{ url_for('main_page') }}">
+            <input type = "search"  name = "search" placeholder="Search">
+             <input type="button" name = "sub" value="Search">
+            </form>
     
-        </form>
+        
+        </div>
 
 {%endfor%}
 
