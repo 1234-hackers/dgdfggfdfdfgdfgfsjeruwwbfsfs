@@ -1,9 +1,12 @@
 {% extends "layout.html"%}
 {%block body%}
 
+    
+{% for x in p%}
 
- <form name="search" method="POST" action="{{ url_for('found_posts') }}">
-    <input type = "search"  name = "search" placeholder="Search">
-     <input type="submit" name = "sub" value="Search">
-    </form>
+{{x}}
+<br>
+<br>
+
+{% endfor %}
     {% endblock%}

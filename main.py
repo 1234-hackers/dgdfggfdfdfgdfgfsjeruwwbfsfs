@@ -591,11 +591,15 @@ def found_posts():
             de_lin = lks.split()
             if x in de_lin:
                 to_show.append(c) 
-    return render_template('found_post.html' , post = to_show)
+            if len(to_show) < 1:
+                no = "No Result Found,Please Check Your Spelling See More"
+            else:
+                no = "Results From Search"
+    return render_template('found_post.html' , post = to_show , n = no)
 
 
-@application.route('/found_peole' , methods = ['POST','GET'])
-def found_peole():
+@application.route('/found_people' , methods = ['POST','GET'])
+def found_people():
     de_search = session['q']
     de_users = []
     people = []
@@ -608,13 +612,17 @@ def found_peole():
         if name == de_search:
             de_users.append(q) 
         if de_search in mai:
-            de_users.append(q)
+            if not q in de_users:
+                de_users.append(q)
         if mai in de_search:
-            de_users.append(q) 
+            if not q in de_users:
+                de_users.append(q) 
         if name in de_search:
-            de_users.append(q)
+            if not q in de_users:
+                de_users.append(q)
         if de_search in name:
-            de_users.append(q) 
+            if not q in de_users:
+                de_users.append(q) 
         people.extend(de_users)
     return render_template('found_people.html' , p = people)
 
