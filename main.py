@@ -565,44 +565,70 @@ def main_page():
                              
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
-@application.route('/view_resault/' , methods = ['POST','GET'])
-def view_resault():
+@application.route('/search/' , methods = ['POST','GET'])
+@csrf.exempt
+def search():
     user_email = session['login_user']
-    to_show = [] 
-    people = []
     if request.method == "POST":
-        de_search = request.form['de_search']
-        finds = de_search.split()
-        for x in finds:
-            al = link_db.find()
-            for c in al:
-                emt = c['tags']
-                if x in emt:
-                    to_show.append(c)      
-                lks = c['link']
-                de_lin = lks.split()
-                if x in de_lin:
-                    to_show.append(c)     
-        de_users = []        
-        all_usr = users.find()
-        for q in all_usr:
-            name = q['username']
-            email = q['email']
-            new_m = email.split('@' , maxsplit = 1 )
-            mai = new_m[0]
-            if name == de_search:
-                de_users.append(q) 
-            if de_search in mai:
-                de_users.append(q)
-            people.extend(de_users)
-            if request.form['subz'] == "View Profile":
-                session.pop("de_email" ,None)
-                name = request.form['id']
-                session['de_email'] == name
-                return redirect(url_for('view_prof')) 
-        return render_template("people.html" , p = de_users)
+        de_search = request.form['search']
+        session['q'] = de_search           
+        return redirect(url_for('found_posts'))    
+   
+    return render_template('search.html')
+
+@application.route('/found_posts/' , methods = ['POST','GET'])
+def found_posts():
+    to_show = []
+    de_search = session['q']
+    finds = de_search.split()
+    al = link_db.find()
+    for x in finds: 
+        for c in al:
+            emt = c['tags']
+            if x in emt:
+                to_show.append(c)      
+            lks = c['link']
+            de_lin = lks.split()
+            if x in de_lin:
+                to_show.append(c) 
+    return render_template('found_post.html' , post = to_show)
+
+
+@application.route('/found_peole' , methods = ['POST','GET'])
+def found_peole():
+    de_search = session['q']
+    de_users = []
+    people = []
+    all_usr = users.find()
+    for q in all_usr:
+        name = q['username']
+        email = q['email']
+        new_m = email.split('@' , maxsplit = 1 )
+        mai = new_m[0]
+        if name == de_search:
+            de_users.append(q) 
+        if de_search in mai:
+            de_users.append(q)
+        if mai in de_search:
+            de_users.append(q) 
+        if name in de_search:
+            de_users.append(q)
+        if de_search in name:
+            de_users.append(q) 
+        people.extend(de_users)
+    return render_template('found_people.html' , p = people)
+
+@application.route('/pple/' , methods = ['POST','GET'])
+def pple():
+    if request.method == "POST":
+        name = request.form['id']
+        session.pop("de_email" ,None)
+        name = request.form['id']
+        session['de_email'] == name
+        redirect(url_for('view_prof'))
     
-    return render_template('view_result.html')
+    return render_template('')
+
 
 @application.route('/profile/' , methods = ['POST','GET'])  
 @csrf.exempt
@@ -628,13 +654,7 @@ def profile():
     links = []
     links.append(prof_pic)
     dez_name = Markup(prof_pic)
-    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
-    if request.method == " POST":
-        the_id = request.form['id']
-        if request.form['sub'] == the_id: 
-            session["le"] = the_id
-            return redirect(url_for('post_on_tags' )) 
-                
+    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg"                
     return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez ,
                            more = more_posts , links = links , prof = dez_name , nn = nnn)
 
@@ -958,12 +978,26 @@ def post():
 @csrf.exempt
 def my_post():
     me =  session['login_user']
+    me2 = me.replace("." , "")
+    this_guy = users.find_one({"email" : me})['username']
     
-    my_posts = list(link_db.find({"owner" : me}))
-    emt = []
-    emt.append(my_post)
+    
+    my_posts = link_db.find({"owner" : me})
+    if my_posts.count() <2:
+        tos = link_db.find_one({"owner" : me})
+    else:
+        tos = link_db.find({"owner" : me})
+    
+    if os.path.exists("static/images/" + me2 +"/" + me2 +".jpg"):
+        prof_pic = "static/images/" + me2 +"/" + me2 +".jpg" 
+      
+    else:
+        prof_pic = "/static/images/default.jpg"
+    
+    dez_name = Markup(prof_pic)
+    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
+    noz = my_posts.count()
         
-    
     if request.method == "POST":
         if request.form['sub'] == "Edit":
             id = request.form['the_id']
@@ -973,104 +1007,141 @@ def my_post():
         if request.form['sub'] == "Delete":
             id = request.form['the_id']
             link_db.find_one_and_delete({"post_id" : id})
-            return render_template('my_post.html' , posts = my_post)
+            return render_template('my_post.html' , posts = tos)
             
         if request.form['sub'] == "Promote":
             id = request.form['the_id']    
             session['post_edit'] = id
             return redirect(url_for('promote'))
-        
-
-    return render_template('my_post.html' , posts = emt , dude = me)
+    
+    return render_template('my_post.html' , posts = tos ,no = noz , dude = this_guy , ppic = nnn)
 
 @application.route('/promote/' , methods = ['POST','GET'])
+@csrf.exempt
 def promote():
+    
     the_post =  session['post_edit']
     post = link_db.find_one({"post_id" : the_post})
     new_tags = []
     older_tags = post['tags']
+    ad_view = []
+    u = "U.S.A and Canada"
+    e = "Europe"
+    a = "Africa"
+    aS = "Asia"
+    aU = "Australia"
+    s =  "South America"
+    g = "Global"
     if request.method == "POST":
-        tag1 = request.form['tag1']
-        tag2 = request.form['tag2']
-        tag3 = request.form['tag3']
-        tag4 = request.form['tag4']
-        tag5 = request.form['tag5']
-        
-        if not tag1 =="":
-            new_tags.append(tag1)
-        if not tag1 =="":
-            new_tags.append(tag2)
-        if not tag1 =="":
-            new_tags.append(tag3)
-        if not tag1 =="":
-            new_tags.append(tag4)
-        if not tag1 =="":
-            new_tags.append(tag5)
-        new_tags.extend(older_tags)
-        
+        tags = request.form['tags']  
+        new_tag_arr = tags.split(",")
+        new_tags.extend(new_tag_arr)
+        min = 500
+        max = 700
+        plan = "2"
+        five = {"plan" : "five",
+               " maxi ": 600,
+                "mini" : 550
+                }
+        twelve = {
+            "plan" : "twelve",
+            "maxi" : 1500 ,
+            "mini" : 1300
+        }
+        fifty = {
+            "plan" : "fifty_dollar" , # up to 8000 views
+            "maxi" : 9000 ,
+            "mini" : 7500
+        }
+        twenty_four = {
+            "plan" : "24 hrs",
+            "maxi" : 1400,
+            "mini" : 1300,
+            "cost" : 10
+        }
+        week  = {
+            "plan" : "1 Week",
+            "maxi" : 12800,
+          "  mini" : 12000,
+           " cost" : 70
+        }
+        three = {
+           " plan" : "72 hrs",
+            "maxi" : 5100,
+           " mini" :4800,
+            "cost" : 32 
+        }
+    
         plan = request.form.get("plan")
         if plan == "2":
-            plan = "five_dollar" # up to 600 views
-            max = 600
-            min = 550
+            p = five
         if plan == "3":
-            the_plan  = "12_dollar" #up to 1500 views
-            max = 1650
-            min = 1300
+            p =twelve
         if plan == "4":
-            plan = "fifty_dollar" # up to 8000 views
-            max = 9000
-            min = 7500
-            
+            p = fifty  
         if plan == "5":
-            plan = "24 hrs"
-            max = 1400
-            min = 1300
-            cost = 10
+            p = twenty_four    
         if plan == "6":
-            the_plan  = "72 hrs"
-            max = 5100
-            min =  4800
-            cost = 32 
+            p = three
         if plan == "7":
-            plan = "1 Week"
-            max = 12800
-            min = 12000
-            cost = 70
+            p = week
+        
         target_reg = request.form.get("target_reg")
         if  target_reg =="11":
-            reg = "U.S.A and Canada"
+            reg = u
         if  target_reg =="12":
-            reg ="Europe"
+            reg =e
         if  target_reg =="13":
-            reg = "Africa"
+            reg = a
         if  target_reg =="14":
-            reg = "Asia"
+            reg = aS
         if  target_reg =="15":
-            reg = "Australia"
+            reg = aU
         if  target_reg =="16":
-            reg = "South America"
+            reg = s
         if  target_reg =="17":
-            reg = "Global"
-        ad_view = []
+            reg = g
+        
         # payment must be done to continue with the rest of the process
         
-        pay = "jk"
-        payment = "jk"
-        if payment == pay:
-            link_db.find_one_and_update({'post_id' : the_post} , {'set' : {'tags' : new_tags , 'region' : reg ,
-                                    'ad_view' : ad_view , 'plan' : plan , "max" : max, "min" : min}})
-        else:
-            return redirect(url_for('promote'))      
-     
+            link_db.find_one_and_update({'post_id' : the_post} , {'$set' : {'tags' : new_tags , 'region' : reg ,
+                                        'ad_view' : ad_view , 'plan' : p }})
+        return redirect(url_for('my_post'))
+          
     return render_template('promote.html' , post = the_post)
 
 
 @application.route('/edit_post/' ,methods = ['POST','GET'])
+@csrf.exempt
 def edit_post():
+    da_id = session['post_edit']
+    the_post = link_db.find_one({"post_id" : da_id})
+    if request.method == "POST":
+        de_link = request.form['link']
+        de_ttle = request.form['title']
+        de_desc = request.form['desc']
+        de_tags = request.form['tags']
+        
+        link = the_post['link']
+        title = the_post['title']
+        desc= the_post['description']
+           
+        
+        
+        if not de_link  == "":
+            link = de_link
+        if not de_ttle =="":
+            title = de_ttle
+        if not de_desc =="":
+            desc = de_desc
+        if not de_tags =="":
+            tags = de_tags
+            tags = tags.split(",")
+   
+            link_db.find_one_and_update({"post_id" : da_id } , { '$set' :  {"link" : link ,"title" : title , "description" : desc, "tags" : tags}})  
+            return redirect(url_for('my_post'))
     
-    
-    return render_template('edit_post.html')
+    return render_template('edit_post.html' , post = the_post)
     
     
     

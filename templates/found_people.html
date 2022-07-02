@@ -1,0 +1,9 @@
+{% extends "layout.html"%}
+{%block body%}
+
+
+ <form name="search" method="POST" action="{{ url_for('found_posts') }}">
+    <input type = "search"  name = "search" placeholder="Search">
+     <input type="submit" name = "sub" value="Search">
+    </form>
+    {% endblock%}

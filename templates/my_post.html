@@ -5,12 +5,24 @@
       }
 </script>
 
+
+
 {%block body%}
 <br>
-{{dude}}
+<br>
 
-{{posts}}
+<div align="center">
+    {{dude}}
 
+    <br>
+    {{noz}}
+    <br>
+   
+    <br>
+<img src = "{{ppic}}">
+</div>
+<br>
+<br>
 {%for x in posts%}
 
 {{x}}
@@ -25,7 +37,7 @@
     </form>
 <br>
 <br>
-{{posts}}
+
 
 
 {%endfor%}
