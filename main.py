@@ -610,7 +610,8 @@ def found_people():
         new_m = email.split('@' , maxsplit = 1 )
         mai = new_m[0]
         if name == de_search:
-            de_users.append(q) 
+            if not q in de_users:
+                de_users.append(q) 
         if de_search in mai:
             if not q in de_users:
                 de_users.append(q)
@@ -624,7 +625,13 @@ def found_people():
             if not q in de_users:
                 de_users.append(q) 
         people.extend(de_users)
-    return render_template('found_people.html' , p = people)
+        people = list(set(people))
+        if len(people) < 1:
+                no = "No Result Found,Please Check Your Spelling See More"
+        else:
+                no = "Results From Search"
+        
+    return render_template('found_people.html' , p = people , n = no)
 
 @application.route('/pple/' , methods = ['POST','GET'])
 def pple():

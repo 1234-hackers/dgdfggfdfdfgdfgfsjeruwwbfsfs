@@ -1,12 +1,26 @@
 {% extends "layout.html"%}
 {%block body%}
 
-    
+{{n}}
+<br>
+<br>
 {% for x in p%}
 
+Username {{x.username}}
+<br>
+<br>
+
+Follows
+<br>
+{%for x in x.tags[0:3]%}
+<ul>
+   <li>
 {{x}}
-<br>
-<br>
+   </li>
+</ul>
+
+{% endfor %}
+
 
 {% endfor %}
     {% endblock%}
