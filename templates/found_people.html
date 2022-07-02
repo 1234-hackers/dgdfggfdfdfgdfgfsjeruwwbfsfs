@@ -22,5 +22,12 @@ Follows
 {% endfor %}
 
 
+
+<form name="view" method="POST" action="{{ url_for('found_people') }}">
+   <input type="hidden" name="id" value="{{x.email}}" valuex="view">  
+   <input type="submit" name="sub" value="View Profile">
+</form>
+
+
 {% endfor %}
     {% endblock%}

@@ -222,7 +222,7 @@ def enter_code():
                 req_time = legit['time_in']
                 diff = now - req_time
                 if code == legit_code and diff < 7:
-                    return redirect(url_for('new_pass'))  
+                    return redirect(url_for('peopleass'))  
                 if diff > 7:
                     return redirect(url_for('reset_pass' ))
             else:
@@ -232,7 +232,7 @@ def enter_code():
             
     return render_template('enter_code.html')
      
-class New_pass(Base_form):
+class peopleass(Base_form):
       
         pass1 = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")]) 
            
@@ -240,10 +240,10 @@ class New_pass(Base_form):
         
         
 
-@application.route('/new_pass/' , methods = ['POST','GET'])
+@application.route('/peopleass/' , methods = ['POST','GET'])
 @csrf.exempt
-def new_pass(email):
-    form = New_pass()
+def peopleass(email):
+    form = peopleass()
     if request.method == "POST" and form.validate():
         users = mongo.db.users
         target_account = session['rset'] 
@@ -257,9 +257,9 @@ def new_pass(email):
             return redirect(url_for('main'))
         else:
             check_pass = " Please Check The Password And Try Again"
-            return render_template('new_pass.html' , form = form , mess = check_pass)
+            return render_template('peopleass.html' , form = form , mess = check_pass)
             
-    return render_template('new_pass.html' , form = form)
+    return render_template('peopleass.html' , form = form)
 
 
 class Base_form(FlaskForm):
@@ -599,10 +599,13 @@ def found_posts():
 
 
 @application.route('/found_people' , methods = ['POST','GET'])
+@csrf.exempt
 def found_people():
+    session.pop("de_email" ,None)
     de_search = session['q']
     de_users = []
     people = []
+    temp = []
     all_usr = users.find()
     for q in all_usr:
         name = q['username']
@@ -625,13 +628,25 @@ def found_people():
             if not q in de_users:
                 de_users.append(q) 
         people.extend(de_users)
-        people = list(set(people))
-        if len(people) < 1:
+        new_p = []
+        for i in people:
+            if i not in new_p:
+                new_p.append(i)
+    
+        if len(new_p) < 1:
                 no = "No Result Found,Please Check Your Spelling See More"
         else:
                 no = "Results From Search"
         
-    return render_template('found_people.html' , p = people , n = no)
+        if request.method == "POST":
+            the_id = request.form['id']
+            if request.form['sub'] == "View Profile": 
+                session["de_email"] = the_id
+                return redirect(url_for('view_prof' ))
+            
+            pass
+        
+    return render_template('found_people.html' , p = new_p , n = no)
 
 @application.route('/pple/' , methods = ['POST','GET'])
 def pple():
@@ -679,7 +694,7 @@ def view_prof():
     user = session['de_email']
     user_email = session['login_user']
     the_user = users.find_one({"email" :user})
-    mez = user.find_one({'email': user_email})
+    mez = users.find_one({'email': user_email})
     folloin = mez['favs']
     if user in folloin:
         state = "Unfollow"

@@ -9,16 +9,16 @@
 </div>
 </div>
 <div align="center">
-    {% for v in usr %}
-    {{v.username}}
-    {{v.email}}
-    <form name="view" method="POST" action="{{ url_for('view_prof') }}">
-        <input type="hidden" name="id" value="{{v.email}}" valuex="view">  
-        <input type="submit" name="subz" value="{{state}}">
-        
     
+    {{usr.username}}
+    <br>
+    <br>
+    {{usr.email}}
+    <form name="view" method="POST" action="{{ url_for('view_prof') }}">
+        <input type="hidden" name="id" value="{{usr.email}}" valuex="view">  
+        <input type="submit" name="subz" value="{{state}}">
         </form>
-    {%endfor%}
+    
 <br>
 <br>
     </div>
