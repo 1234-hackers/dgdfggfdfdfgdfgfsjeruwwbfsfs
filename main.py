@@ -690,12 +690,29 @@ def profile():
 
 
 @application.route('/view_prof/' , methods = ['POST','GET'])
+@csrf.exempt
 def view_prof():
     user = session['de_email']
     user_email = session['login_user']
     the_user = users.find_one({"email" :user})
     mez = users.find_one({'email': user_email})
     folloin = mez['favs']
+    all_em_posts = link_db.find({'owner' : user})
+    
+    me = user
+    me2 = me.replace("." , "")
+    
+    if os.path.exists("static/images/" + me2 +"/" + me2 +".jpg"):
+        prof_pic = "static/images/" + me2 +"/" + me2 +".jpg" 
+      
+    else:
+        prof_pic = "/static/images/default.jpg"
+    links = []
+    links.append(prof_pic)
+    dez_name = Markup(prof_pic)
+    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
+    
+    
     if user in folloin:
         state = "Unfollow"
     else:
@@ -718,7 +735,7 @@ def view_prof():
                 users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
                 
  
-    return render_template('view_prof.html' , usr = the_user , state = state)
+    return render_template('view_prof.html' , usr = the_user , state = state , pic = nnn , posts = all_em_posts)
 
 
 @application.route('/edit_profile/' ,methods = ['POST','GET'])
@@ -760,6 +777,13 @@ def view_link():
                 commentz = {de_name : words}
                 comments.append(commentz)
                 link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"comments": comments}} )
+  
+        if request.form['sub'] == "View Profile": 
+            the_id = request.form['id']
+            fou = link_db.find_one({"post_id" : the_id})
+            the_id_owner = fou['owner']
+            session["de_email"] = the_id_owner
+            return redirect(url_for('view_prof' ))
         
     
     link = session['linky']

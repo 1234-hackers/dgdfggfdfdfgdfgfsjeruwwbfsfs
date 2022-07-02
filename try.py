@@ -204,8 +204,18 @@ def eml():
                     link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes , 'total_likes' : total_likes }} )
             #on peoples form submit     
             # """
-            
-email = "jacksonmuta@gmail.com"
-new_m = email.split('.' , maxsplit = 1 )
-new_m2 = email.split('@' , maxsplit = 1 )
-print(new_m2)
+def remove():       
+    email = "jacksonmuta@gmail.com"
+    new_m = email.split('.' , maxsplit = 1 )
+    new_m2 = email.split('@' , maxsplit = 1 )
+    print(new_m2)
+
+
+def check():
+    if os.path.exists("static/images/default.jpg"):
+        print( "Yeah")
+    else:
+        print("No No")
+        
+check()
+        
