@@ -1,0 +1,16 @@
+
+{% extends "layout.html"%}
+
+{%block body%}
+
+{%for x in favss%}
+ <form name="view" method="POST" action="{{ url_for('saved') }}">
+    <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
+    <input type="submit" name="sub" value="View Link">
+    <input type="submit" name="sub" value="Remove">
+
+    </form>
+{%endfor%}
+
+
+    {%endblock%}

@@ -562,6 +562,21 @@ def main_page():
                 total_likes = len(likes)
                 link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes  , 'total_likes' : total_likes}} )
                 b_color = "less"   
+        
+        if request.form['sub'] == "Save": 
+            saveds = the_user.get('saved')
+            if saveds:
+                saved = the_user['saved']
+                new_empt = []
+                new_empt.append(the_id)
+                new_saved = saved.extend(new_empt)
+                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': new_saved}}) 
+            else:
+                saved = []
+                saved.append(the_id)
+                users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved' : saved}})
+        
+        
                              
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
@@ -687,6 +702,34 @@ def profile():
     nnn =   "/static/images/" + me2 +"/" + me2 +".jpg"                
     return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez ,
                            more = more_posts , links = links , prof = dez_name , nn = nnn)
+
+
+@application.route('/saved/' , methods = ['POST','GET'])
+def saved():
+    de_render = []
+    user_email = session['login_user']
+    the_user = users.find_one({"email" :user_email})
+    favss = the_user['saved']
+    for x in favss:
+        the_post = link_db.find_one({"post_id" :x})
+        de_render.append(the_post)
+        
+        
+
+    if request.method == "POST":
+        the_id = request.form['id']
+        if request.form['sub'] == "View Link": 
+            session["linky"] = the_id
+            return redirect(url_for('view_link' ))
+        
+        if request.form['sub'] == "Remove":
+            the_id = request.form['id']
+            new_f = favss.remove(the_id)
+            users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved':new_f}})
+
+    
+    return render_template('saved.html' , favss = de_render)
+
 
 
 @application.route('/view_prof/' , methods = ['POST','GET'])
