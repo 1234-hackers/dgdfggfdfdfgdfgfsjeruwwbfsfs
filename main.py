@@ -705,6 +705,7 @@ def profile():
 
 
 @application.route('/saved/' , methods = ['POST','GET'])
+@csrf.exempt
 def saved():
     de_render = []
     user_email = session['login_user']
@@ -714,7 +715,9 @@ def saved():
         the_post = link_db.find_one({"post_id" :x})
         de_render.append(the_post)
         
+    if len(de_render) < 1:
         
+        pass   
 
     if request.method == "POST":
         the_id = request.form['id']
@@ -727,10 +730,7 @@ def saved():
             new_f = favss.remove(the_id)
             users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved':new_f}})
 
-    
     return render_template('saved.html' , favss = de_render)
-
-
 
 @application.route('/view_prof/' , methods = ['POST','GET'])
 @csrf.exempt
