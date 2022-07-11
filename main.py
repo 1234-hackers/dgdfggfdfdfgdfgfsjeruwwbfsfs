@@ -372,7 +372,7 @@ def register():
             favs = []
             tags = []
             users.insert_one({"email":email ,'username':username , "password":hashed , 
-                            "profile" : uploa , "favs" : favs , "tags" : tags , "verified" :0 })
+                            "profile" : uploa , "favs" : favs , "tags" : tags , "verified" :0 , 'saved' : [] })
             
             if users.find_one({"email":email}):
                 code = random.randint(145346 , 976578)
@@ -564,20 +564,15 @@ def main_page():
                 b_color = "less"   
         
         if request.form['sub'] == "Save": 
-            saveds = the_user.get('saved')
-            if saveds:
-                saved = the_user['saved']
-                new_empt = []
-                new_empt.append(the_id)
-                new_saved = saved.extend(new_empt)
-                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': new_saved}}) 
-            else:
-                saved = []
+            saved = the_user['saved']
+            if not the_id in saved : 
                 saved.append(the_id)
-                users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved' : saved}})
-        
-        
-                             
+                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': saved}}) 
+            else:
+                saved = the_user['saved']
+                saved.remove(the_id)
+                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': saved}})
+                        
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
 @application.route('/search/' , methods = ['POST','GET'])
@@ -711,14 +706,18 @@ def saved():
     user_email = session['login_user']
     the_user = users.find_one({"email" :user_email})
     favss = the_user['saved']
+    if len(favss) < 1:
+        m = "You Dont Have Saved Items"
+    else:
+        m = " These Are Your Saved Items"
+    n = ""
+    if n in favss:
+        favss.remove(n)
+        users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved':favss}})
+
     for x in favss:
         the_post = link_db.find_one({"post_id" :x})
         de_render.append(the_post)
-        
-    if len(de_render) < 1:
-        
-        pass   
-
     if request.method == "POST":
         the_id = request.form['id']
         if request.form['sub'] == "View Link": 
@@ -727,10 +726,10 @@ def saved():
         
         if request.form['sub'] == "Remove":
             the_id = request.form['id']
-            new_f = favss.remove(the_id)
-            users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved':new_f}})
+            favss.remove(the_id)
+            users.find_one_and_update({'email' : user_email} , {'$set' :  {'saved':favss}})
 
-    return render_template('saved.html' , favss = de_render)
+    return render_template('saved.html' , favss = de_render , m = m )
 
 @application.route('/view_prof/' , methods = ['POST','GET'])
 @csrf.exempt
@@ -885,160 +884,6 @@ def advert():
                              "plan" : plan })        
     
     return render_template('advert.html')
-@application.route('/mpesa/' , methods = ['POST','GET'])
-def mpesa():
-    
-    
-    
-    
-    
-    return render_template('mpesa.html')
-
-
-
-
-@application.route('/transact/b2b')
-def b2b_transact():
-    data={"initiator": "[Initiator]",
-            "security_credential": "[SecurityCredential]",#from developers portal
-            "amount": "1000",
-            "command_id":"[command_id]",
-            "sender_identifier_type":"[SenderIdentifierType]",
-            "receiver_identifier_type":"[ReceiverIdentifierType]",
-            "party_a": "[PartyA]",
-            "party_b": "[PartyB]",
-            "remarks": "[Remarks]",
-            "queue_timeout_url": "YOUR_URL" ,
-            "result_url": "YOUR_URL",
-            "account_reference": "[AccountReference]"
-    }
-    #mpesa_api.B2B.transact(**data)  # ** unpacks the dictionary
-
-
-
-main_class = [
-    "Science And Technology",
-    "Celebrities And Gossip",
-    "Vaccation , Wildlife and Earth",
-    "Mortage , Property And House Items",
-    "Investments And Business",
-    "Relationships , Marriage and Parenting",
-    "Health And Nutrition" ,
-    "Agriculture and Food Security",
-    "Sports"
-    "Entertainment"
-    ]
-    
-tech =[
-"TECHNOLOGY",
-"Computing Information Technology", 
-"Medical Technology And Equipment" ,
-"Communications Technology" ,
-"Industrial and Manufacturing Technology" ,
-"Education Technology" ,
-"Construction Technology" ,
-"Aerospace Technology" ,
-"Biotechnology" ,
-"Agriculture Technology" ,
-"Electronics Technology" ,
-"Military Technology" ,
-"Robotics Technology" ,
-"Artificial Intelligence Technology" ,
-"Assistive Technology" ,
-"Entertainment Technology" ,
-"Sports Technology" ,
-"Vehicle Technology" ,
-"Environmental Technology" ,
-"3D Printing Technology" ,
-    
-]
-
-enta =[
-"ENTERTAINMENT",
-"Movies and TV shows",
-"Video Games",
-"Books",
-"Comedy,Circus and theater",
-"Concerts",
-"Travel And Road Trips",
-"Music",
-"Gambling",
-"Boeard Games",
-"Children Content"
-    
-]
-
-sports = [
-"SPORTS",
-"MotorSports",
-"FootBall",
-"Boxing",
-"Wrestling",
-"Martial Arts",
-"Net Games",
-"Cricket",
-"American Football",
-"Indoor Games"    
-]
-health_nutr_agric = [
-"HEALTH AND NUTRITION",
-"KitchenWare and Tech",
-"Recipes",
-"Niutrition",
-"Deseases"
-
-]
-
-agric_green = [
-"GO GREEN AND AGRICULTURE",
-"Vaccations",
-"Energy",
-"Wildlife",
-"Forestry",
-"Agricultural Technology",
-"Food Security",
-"water",
-"Global Warming"
-
-
-
-]
-
-rel_life_style = [
-"LIFESTYLE AND RELATIONS",
-"Fashion",
-"Shoes",
-"Women Wear",
-"Weddings",
-"Men Wear",
-"Hair Beauty",
-"Marriage",
-"Sex and Relationships",
-"Parenting",
-"Devorce"                 
-]
-
-buss_invest = [
-"BUSINESS AND INVESTMENT",
-"CryptoCurrency",
-"Sports Betting",
-"Banking",
-"Stock_Exchange",
-"Online Business",
-
-]
-
-mortage_property = [
-"MORTAGE AND PROPERTY",
-"Land",
-"Houses",
-"Applicationartments",
-"Family Transport",
-"Furniture and House Equipment",
-"Cars"
-    ]
-
-
 @application.route('/post/' , methods = ['POST','GET'])
 @csrf.exempt
 def post(): 
@@ -1063,10 +908,13 @@ def post():
         tag_arr.append(tag1)
         tag_arr.append(tag2)
         owner = session['login_user']
+        wner_name = users.find_one({'email' : owner})
+        owner_name = wner_name['username']
         like_arr = [owner]
         comments = []
         link_db.insert_one({"owner" : owner , "link" : link ,  "likes" : like_arr , "comments" : comments ,
-                            "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id })
+                            "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id ,
+                            'owner_name' : owner_name})
         return redirect(url_for('main_page'))
     return render_template('post.html')
 
@@ -1076,15 +924,15 @@ def post():
 def my_post():
     me =  session['login_user']
     me2 = me.replace("." , "")
-    this_guy = users.find_one({"email" : me})['username']
+    thiis_guy = users.find_one({"email" : me})
+    this_guy = thiis_guy['username']
     
     
     my_posts = link_db.find({"owner" : me})
-    if my_posts.count() <2:
-        tos = link_db.find_one({"owner" : me})
-    else:
-        tos = link_db.find({"owner" : me})
-    
+    tos = []
+    for x in my_posts:
+        tos.append(x)
+   
     if os.path.exists("static/images/" + me2 +"/" + me2 +".jpg"):
         prof_pic = "static/images/" + me2 +"/" + me2 +".jpg" 
       
@@ -1118,6 +966,7 @@ def my_post():
 def promote():
     
     the_post =  session['post_edit']
+    da_post = link_db.find_one({"post_id" : the_post})
     post = link_db.find_one({"post_id" : the_post})
     new_tags = []
     older_tags = post['tags']
@@ -1129,46 +978,44 @@ def promote():
     aU = "Australia"
     s =  "South America"
     g = "Global"
-    if request.method == "POST":
-        tags = request.form['tags']  
-        new_tag_arr = tags.split(",")
-        new_tags.extend(new_tag_arr)
-        min = 500
-        max = 700
-        plan = "2"
-        five = {"plan" : "five",
+    
+    five = {"plan" : "five",
                " maxi ": 600,
                 "mini" : 550
                 }
-        twelve = {
+    twelve = {
             "plan" : "twelve",
             "maxi" : 1500 ,
             "mini" : 1300
         }
-        fifty = {
+    fifty = {
             "plan" : "fifty_dollar" , # up to 8000 views
             "maxi" : 9000 ,
             "mini" : 7500
         }
-        twenty_four = {
+    twenty_four = {
             "plan" : "24 hrs",
             "maxi" : 1400,
             "mini" : 1300,
             "cost" : 10
         }
-        week  = {
+    week  = {
             "plan" : "1 Week",
             "maxi" : 12800,
           "  mini" : 12000,
            " cost" : 70
         }
-        three = {
+    three = {
            " plan" : "72 hrs",
             "maxi" : 5100,
            " mini" :4800,
             "cost" : 32 
         }
     
+    if request.method == "POST":
+        tags = request.form['tags']  
+        new_tag_arr = tags.split(",")
+        new_tags.extend(new_tag_arr)
         plan = request.form.get("plan")
         if plan == "2":
             p = five
@@ -1205,7 +1052,7 @@ def promote():
                                         'ad_view' : ad_view , 'plan' : p }})
         return redirect(url_for('my_post'))
           
-    return render_template('promote.html' , post = the_post)
+    return render_template('promote.html' , post = da_post)
 
 
 @application.route('/edit_post/' ,methods = ['POST','GET'])

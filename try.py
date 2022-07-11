@@ -3,48 +3,162 @@ import os
 from datetime import timedelta , datetime
 
 
+
+
+tech =[
+"TECHNOLOGY",
+"Computing Information Technology", 
+"Medical Technology And Equipment" ,
+"Communications Technology" ,
+"Industrial and Manufacturing Technology" ,
+"Education Technology" ,
+"Construction Technology" ,
+"Aerospace Technology" ,
+"Biotechnology" ,
+"Agriculture Technology" ,
+"Electronics Technology" ,
+"Military Technology" ,
+"Robotics Technology" ,
+"Artificial Intelligence Technology" ,
+"Assistive Technology" ,
+"Entertainment Technology" ,
+"Sports Technology" ,
+"Vehicle Technology" ,
+"Environmental Technology" ,
+"3D Printing Technology" ,
+    
+]
+
+enta =[
+"ENTERTAINMENT",
+"Movies and TV shows",
+"Video Games",
+"Books",
+"Comedy,Circus and theater",
+"Concerts",
+"Travel And Road Trips",
+"Music",
+"Gambling",
+"Boeard Games",
+"Children Content"
+    
+]
+
+sports = [
+"SPORTS",
+"MotorSports",
+"FootBall",
+"Boxing",
+"Wrestling",
+"Martial Arts",
+"Net Games",
+"Cricket",
+"American Football",
+"Indoor Games"    
+]
+health_nutr_agric = [
+"HEALTH AND NUTRITION",
+"KitchenWare and Tech",
+"Recipes",
+"Niutrition",
+"Deseases"
+
+]
+
+agric_green = [
+"GO GREEN AND AGRICULTURE",
+"Vaccations",
+"Energy",
+"Wildlife",
+"Forestry",
+"Agricultural Technology",
+"Food Security",
+"water",
+"Global Warming"
+
+
+
+]
+
+rel_life_style = [
+"LIFESTYLE AND RELATIONS",
+"Fashion",
+"Shoes",
+"Women Wear",
+"Weddings",
+"Men Wear",
+"Hair Beauty",
+"Marriage",
+"Sex and Relationships",
+"Parenting",
+"Devorce"                 
+]
+
+buss_invest = [
+"BUSINESS AND INVESTMENT",
+"CryptoCurrency",
+"Sports Betting",
+"Banking",
+"Stock_Exchange",
+"Online Business",
+
+]
+
+mortage_property = [
+"MORTAGE AND PROPERTY",
+"Land",
+"Houses",
+"Applicationartments",
+"Family Transport",
+"Furniture and House Equipment",
+"Cars"
+    ]
+
+
+
+'''
+@application.route('/mpesa/' , methods = ['POST','GET'])
+def mpesa():
+    
+    
+    
+    
+    
+    return render_template('mpesa.html')
+
+
+
+
+@application.route('/transact/b2b')
+def b2b_transact():
+    data={"initiator": "[Initiator]",
+            "security_credential": "[SecurityCredential]",#from developers portal
+            "amount": "1000",
+            "command_id":"[command_id]",
+            "sender_identifier_type":"[SenderIdentifierType]",
+            "receiver_identifier_type":"[ReceiverIdentifierType]",
+            "party_a": "[PartyA]",
+            "party_b": "[PartyB]",
+            "remarks": "[Remarks]",
+            "queue_timeout_url": "YOUR_URL" ,
+            "result_url": "YOUR_URL",
+            "account_reference": "[AccountReference]"
+    }
+    #mpesa_api.B2B.transact(**data)  # ** unpacks the dictionary
+
+@
+
+'''
+
+
+
+
+
 def big():
     strin = "hidfhfhghfghjgfjghkghkhjlhjlhjlgfhgfkdfhfkdtjgfhcvbmcfgbv,ndghhjmdfgnnmb h dgmgmbvcvnmbh,mdfbhdmhfmdxfncgnfsngfndfgfnhfdndg"
 
     print(str(len(strin)))
 
-
-    tech =[
-    "Computing Information Technology", 
-    "Medical Technology And Equipment" ,
-    "Communications Technology" ,
-    "Industrial and Manufacturing Technology" ,
-    "Education Technology" ,
-    "Construction Technology" ,
-    "Aerospace Technology" ,
-    "Biotechnology" ,
-    "Agriculture Technology" ,
-    "Electronics Technology" ,
-    "Military Technology" ,
-    "Robotics Technology" ,
-    "Artificial Intelligence Technology" ,
-    "Assistive Technology" ,
-    "Entertainment Technology" ,
-    "Sports Technology" ,
-    "Vehicle Technology" ,
-    "Environmental Technology" ,
-    "3D Printing Technology" ,
-        
-    ]
-
-
-main_class = [
-        "Science And Technology",
-        "Celebrities And Gossip",
-        "Vaccation , Wildlife and Earth",
-        "Mortage , Property And House Items",
-        "Investments And Business",
-        "Relationships , Marriage and Parenting",
-        "Health And Nutrition" ,
-        "Agriculture and Food Security",
-        "Sports"
-        "Entertainm",
-    ]
 def fors():
     num = 1
     new =[]
@@ -82,16 +196,6 @@ def arxz():
         
     
 import random   
-def listes():
-    
-    delist =  list(main_class)
-    
-    der = random.sample(delist, 3)
-
-    print(der)
-    
-   
-    
 #listes()
 
 def yeah():

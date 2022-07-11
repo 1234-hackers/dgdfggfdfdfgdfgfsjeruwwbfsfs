@@ -24,9 +24,15 @@
 <br>
 <br>
 {%for x in posts%}
-
-{{x}}
-
+Title {{x.title}}
+<br>
+<br>
+The Link {{x.link}}
+<br>
+<br>
+Description {{x.description}}
+<br>
+<br>
 <form name="view" method="POST" action="{{ url_for('my_post') }}">
     <input type="hidden" name="the_id" value="{{x.post_id}}" valuex="view">  
     <input type="submit" name="sub" value="Edit">
@@ -41,5 +47,6 @@
 
 
 {%endfor%}
+
 
 {%endblock%}
