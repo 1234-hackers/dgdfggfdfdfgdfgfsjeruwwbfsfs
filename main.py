@@ -888,6 +888,10 @@ def advert():
 @csrf.exempt
 def post(): 
     if request.method == "POST":
+        
+        th = request.files['thumb']
+        
+        filename = th.filename
             
         link_db = mongo.db.links
         
@@ -905,6 +909,23 @@ def post():
 
         tag_arr = []
         
+        
+        
+        
+        def allowed_file(filename):
+            return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+            
+        if allowed_file(filename): 
+            da_nam = post_id.replace("." , "")
+            da_name = da_nam[0:10]
+            th.save("static/images/" + filename)
+            image1 = "static/images/"  + filename
+            image = Image.open(image1)
+            new = image.convert("RGB")
+            new.save(da_name + '.jpg')
+            image = da_name + '.jpg'
+            to_db =  "static/images/" + image
+        
         tag_arr.append(tag1)
         tag_arr.append(tag2)
         owner = session['login_user']
@@ -914,7 +935,7 @@ def post():
         comments = []
         link_db.insert_one({"owner" : owner , "link" : link ,  "likes" : like_arr , "comments" : comments ,
                             "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id ,
-                            'owner_name' : owner_name})
+                            'owner_name' : owner_name , 'ima': to_db})
         return redirect(url_for('main_page'))
     return render_template('post.html')
 

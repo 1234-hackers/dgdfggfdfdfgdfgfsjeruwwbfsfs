@@ -5,7 +5,12 @@
 <div name="fullform" align ="center">
 <form method="POST" action="{{ url_for('post') }}"  enctype="multipart/form-data" >
 
+ThumbNail Or Clickbait
+<br>
+<input type = "file" name="thumb"  onchange="loadFile(event)" >
 
+    <br>
+    <br>
 
 <input name="title" id="title" placeholder="Link Title" type="text">
     <br>
