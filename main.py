@@ -763,6 +763,9 @@ def view_prof():
         if request.form['sub'] == "Follow":
             the_id = request.form['id']
             owner_d =  link_db.find_one({"post_id" : the_id})
+            em = []
+            em.append(owner_d)
+            dd = em[0]
             owner = owner_d['owner']
             cl = session['login_user']
             folloin = users.find_one({'email' :cl})
@@ -922,9 +925,9 @@ def post():
             image1 = "static/images/"  + filename
             image = Image.open(image1)
             new = image.convert("RGB")
-            new.save(da_name + '.jpg')
+            new.save( "static/images/" + da_name + '.jpg')
             image = da_name + '.jpg'
-            to_db =  "static/images/" + image
+            to_db =  "/static/images/" + image
         
         tag_arr.append(tag1)
         tag_arr.append(tag2)
