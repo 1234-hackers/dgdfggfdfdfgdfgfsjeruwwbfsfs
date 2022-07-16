@@ -4,6 +4,7 @@
 
 Edit Profile Here
 <form method="POST" action= "{{ url_for('edit_profile') }}"  enctype="multipart/form-data"> 
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     
     <br>
     <input type="text" name = "username"  placeholder = "{{inf.username}}"  >

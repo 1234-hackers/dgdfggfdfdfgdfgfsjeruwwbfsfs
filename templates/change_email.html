@@ -4,6 +4,7 @@
 
 Change Your Email Here Please
 <form method="POST" action= "{{ url_for('change_email') }}"> 
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     Changing The From This Email : {{inf.email}}
     
     <br>

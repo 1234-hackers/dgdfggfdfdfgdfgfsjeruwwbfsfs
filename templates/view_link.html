@@ -37,6 +37,7 @@
 {%endfor%}
         
         <form name="view" method="POST" action="{{ url_for('view_link') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="id" value="{{x.post_id}}" valuex="view"> 
             <input type="text" name ="comm" placeholder = "Comment" > 
             <input type="submit" name="sub" value="Comment">

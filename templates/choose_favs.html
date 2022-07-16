@@ -10,6 +10,7 @@
     {% for x in tags%}
 
     <form name="view" method="POST" action="{{ url_for('choose_favs') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <br>
 
         {{x}}<input type="checkbox" name="tags" value="{{x}}" >

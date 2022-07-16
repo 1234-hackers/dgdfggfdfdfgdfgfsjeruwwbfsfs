@@ -125,7 +125,7 @@ def login_required(f):
             return f(*args,**kwargs,)
         else:
             time.sleep(2)
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
     return wrap
 
 
@@ -311,6 +311,7 @@ def logout():
     if request.method == "POST":
         if request.form['sub'] == "Yes":
             session.pop('login_user', None)
+            return redirect(url_for('login'))
         else:
             return redirect(url_for('feed')) 
     return render_template('logout.html')
@@ -846,22 +847,26 @@ def view_link():
     link_db = mongo.db.links
     render_arr = []
     all_posts = link_db.find()
-    post_in = link_db.find({"post_id" : link})
-    post_in_2 =  link_db.find_one({"post_id" : link})
-    post_tags = post_in_2['tags']
-    for y in post_tags:
-        indiv_tags  = y
-        #relevant = trending_db.find({"tags" : tags})
-        arr1 = []
-        all_posts= link_db.find({}).limit(500)
-        for x in all_posts:
-            tags = x['tags']
-            if indiv_tags in tags: 
-                arr1.append(x)        
-    render_arr.extend(arr1)
-    if len(render_arr) < 500:
-        random_psts = all_posts = link_db.find().limit(10)
-        render_arr.extend(random_psts)
+    post_in = link_db.find_one({"post_id" : link})
+    if post_in :
+        post_in_2 =  link_db.find_one({"post_id" : link})
+        post_tags = post_in_2['tags']
+        for y in post_tags:
+            indiv_tags  = y
+            #relevant = trending_db.find({"tags" : tags})
+            arr1 = []
+            all_posts= link_db.find({}).limit(500)
+            for x in all_posts:
+                tags = x['tags']
+                if indiv_tags in tags: 
+                    arr1.append(x)        
+        render_arr.extend(arr1)
+        if len(render_arr) < 500:
+            random_psts = all_posts = link_db.find().limit(10)
+            render_arr.extend(random_psts)   
+            
+    else:
+        return redirect(url_for('feed'))
     return render_template('view_link.html' , taged = render_arr ,  item = post_in , link = link)
 
 @application.route('/advert/' , methods = ['POST','GET'])
@@ -957,6 +962,7 @@ def post():
 
 @application.route('/my_post/' , methods = ['POST','GET'])
 @csrf.exempt
+@login_required
 def my_post():
     me =  session['login_user']
     me2 = me.replace("." , "")

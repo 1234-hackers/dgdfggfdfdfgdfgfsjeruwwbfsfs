@@ -15,6 +15,7 @@
 <br>
   
     <form name="view" method="POST" action="{{ url_for('view_resault') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="id" value="{{x.email}}" valuex="view">  
         <input type="submit" name="subz" value="View Profile">
         </form>

@@ -3,6 +3,7 @@
 {%block body%}
 
 <form method="POST" action="{{ url_for('advert') }}"  enctype="multipart/form-data" >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <br>
 <br>
 <input type = "file" name = "img" required onchange="loadFile(event)" placeholder = "Select Picture" aria-label="Select Picture">

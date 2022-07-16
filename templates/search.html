@@ -5,6 +5,7 @@
 <h2>
     <div align="center">
         <form name="search" method="POST" action="{{ url_for('search') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type = "search"  name = "search" placeholder="Search">
              <input type="submit" name = "sub" value="Search">
             </form>

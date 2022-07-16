@@ -3,6 +3,7 @@
 {%block body%}
 Verify Your Email Please
 <form method="POST" action= "{{ url_for('verify_email') }}"> 
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <br>
     <input type="email" name = "email"  placeholder = "Email To Verify"  >
     <br>
