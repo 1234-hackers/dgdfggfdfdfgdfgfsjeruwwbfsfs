@@ -321,5 +321,32 @@ def check():
     else:
         print("No No")
         
-check()
-        
+#check()
+
+
+
+from pymongo import MongoClient
+
+uri = "mongodb://localhost:27017/"
+
+client = MongoClient(uri)
+
+
+database = client['users']
+
+users_collection = database['links']
+
+tuts2 = database['tuts2']
+
+kp_coll = database['drugs'] 
+
+def do_i_t():
+    the_id = "$1$tHrDDHGB$WVy/1j8CJ/gDE4bHd6kJ01"
+    em = []
+    owner_d =  users_collection.find_one({"post_id" : the_id}) 
+    em.append(owner_d)  
+    gg = em[0]
+    print(em[0])
+    owner = gg['owner']
+    print(owner)
+do_i_t()   

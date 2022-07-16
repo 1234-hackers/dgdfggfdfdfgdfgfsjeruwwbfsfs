@@ -563,15 +563,7 @@ def main_page():
                 link_db.find_one_and_update({"post_id" : the_id} ,{ '$set' :  {"likes": likes  , 'total_likes' : total_likes}} )
                 b_color = "less"   
         
-        if request.form['sub'] == "Save": 
-            saved = the_user['saved']
-            if not the_id in saved : 
-                saved.append(the_id)
-                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': saved}}) 
-            else:
-                saved = the_user['saved']
-                saved.remove(the_id)
-                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': saved}})
+        
                         
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
@@ -761,15 +753,15 @@ def view_prof():
         state = "Follow"
     if request.method == "POST":
         if request.form['sub'] == "Follow":
-            the_id = request.form['id']
-            owner_d =  link_db.find_one({"post_id" : the_id})
             em = []
-            em.append(owner_d)
-            dd = em[0]
-            owner = owner_d['owner']
+            the_id = request.form['id']
+            owner_d =  link_db.find_one({"post_id" : the_id}) 
+            em.append(owner_d)  
+            gg = em[0]
+            owner = gg['owner']
             cl = session['login_user']
-            folloin = users.find_one({'email' :cl})
-            f = folloin['favs']
+            folloinx = users.find_one({'email' :cl})
+            f = folloinx['favs']
             if not owner in f:
                 f.append(owner)
                 state = "Unfollow"
@@ -829,8 +821,17 @@ def view_link():
             the_id_owner = fou['owner']
             session["de_email"] = the_id_owner
             return redirect(url_for('view_prof' ))
-        
-    
+        if request.form['sub'] == "Save": 
+            saved = the_user['saved']
+            if not the_id in saved : 
+                saved.append(the_id)
+                users.find_one_and_update({'email' : user_email}  ,{ '$set' :  {'saved': saved}}) 
+                return redirect(url_for('saved'))
+            else:
+                pass
+                
+                
+
     link = session['linky']
     link_db = mongo.db.links
     render_arr = []
@@ -924,7 +925,8 @@ def post():
             th.save("static/images/" + filename)
             image1 = "static/images/"  + filename
             image = Image.open(image1)
-            new = image.convert("RGB")
+            image2 = image.resize((500,500),Image.ANTIALIAS)
+            new = image2.convert("RGB")
             new.save( "static/images/" + da_name + '.jpg')
             image = da_name + '.jpg'
             to_db =  "/static/images/" + image
