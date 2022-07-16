@@ -32,7 +32,7 @@ Posts Are Here
 {{x.total_likes}}
 <h2>
   
-    <form name="view" method="POST" action="{{ url_for('main_page') }}">
+    <form name="view" method="POST" action="{{ url_for('feed') }}">
         <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
         <input type="submit" name="sub" value="View Link">
         <input type="button" name="sub" value="Like">

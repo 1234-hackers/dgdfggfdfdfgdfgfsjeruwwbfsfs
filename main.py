@@ -161,7 +161,7 @@ def home():
                         if len(fa) < 5:
                              return redirect(url_for('choose_tags'))
                         else:
-                            return redirect(url_for('main_page'))
+                            return redirect(url_for('feed'))
                     else:    
                         session_time = request.form.get("session_time") 
                         if  session_time == 2:
@@ -171,7 +171,7 @@ def home():
                         if len(fa) < 5:
                             return redirect(url_for('choose_tags'))
                         else:    
-                            return redirect(url_for('main_page'))   
+                            return redirect(url_for('feed'))   
     return render_template("index.html" , form = form)
 
 
@@ -293,7 +293,7 @@ def login():
                         if len(fa) < 5:
                              return redirect(url_for('choose_tags'))
                         else:
-                            return redirect(url_for('main_page'))
+                            return redirect(url_for('feed'))
                     else:    
                         session_time = request.form.get("session_time") 
                         if  session_time == 2:
@@ -303,9 +303,17 @@ def login():
                         if len(fa) < 5:
                             return redirect(url_for('choose_tags'))
                         else:    
-                            return redirect(url_for('main_page'))
+                            return redirect(url_for('feed'))
     return render_template('login.html' , form = form)
 
+@application.route('/logout/' , methods = ['POST','GET'])
+def logout():
+    if request.method == "POST":
+        if request.form['sub'] == "Yes":
+            session.pop('login_user', None)
+        else:
+            return redirect(url_for('feed')) 
+    return render_template('logout.html')
 
 class Base_form(FlaskForm):
     
@@ -434,7 +442,7 @@ def choose_tags():
             for y in aaction:
                 em_tags.append(y)
             user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"tags": em_tags}} )
-            return redirect(url_for('main_page' ))
+            return redirect(url_for('feed' ))
             
             
     return render_template('choose_tags.html' , tags = the_tags)
@@ -482,10 +490,10 @@ def choose_favs():
             user_db.find_one_and_update({"email" : user_email} ,{ '$set' :  {"favs": e_favs}} )
     return render_template('choose_favs.html')
 
-@application.route('/main_page/' , methods = ['POST','GET'])
+@application.route('/feed/' , methods = ['POST','GET'])
 @csrf.exempt
 @login_required
-def main_page():
+def feed():
     link_db = mongo.db.links
     em = link_db.find()
     user = mongo.db.users
@@ -732,6 +740,18 @@ def view_prof():
     mez = users.find_one({'email': user_email})
     folloin = mez['favs']
     all_em_posts = link_db.find({'owner' : user})
+        
+    
+    
+    cl = session['login_user']
+    folloinx = users.find_one({'email' :cl})
+    f = folloinx['favs']
+    
+    dudes = session["de_email"]
+    if not dudes in f:
+        state = "Unfollow"
+    else:
+        state = "Follow"
     
     me = user
     me2 = me.replace("." , "")
@@ -746,33 +766,23 @@ def view_prof():
     dez_name = Markup(prof_pic)
     nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
     
-    
-    if user in folloin:
-        state = "Unfollow"
-    else:
-        state = "Follow"
     if request.method == "POST":
         if request.form['sub'] == "Follow":
             em = []
             the_id = request.form['id']
-            owner_d =  link_db.find_one({"post_id" : the_id}) 
-            em.append(owner_d)  
-            gg = em[0]
-            owner = gg['owner']
-            cl = session['login_user']
-            folloinx = users.find_one({'email' :cl})
-            f = folloinx['favs']
-            if not owner in f:
-                f.append(owner)
+            if not the_id in f:
+                f.append(the_id)
                 state = "Unfollow"
                 users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+                return render_template('view_prof.html' , usr = the_user, state = state, pic = nnn , posts = all_em_posts)
             else:
-                f.remove(owner)
+                f.remove(the_id)
                 state = "Follow"
                 users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+                return render_template('view_prof.html' , usr = the_user, pic = nnn , state = state , posts = all_em_posts)
                 
  
-    return render_template('view_prof.html' , usr = the_user , state = state , pic = nnn , posts = all_em_posts)
+    return render_template('view_prof.html' , usr = the_user, state = state , pic = nnn , posts = all_em_posts)
 
 
 @application.route('/edit_profile/' ,methods = ['POST','GET'])
@@ -941,7 +951,7 @@ def post():
         link_db.insert_one({"owner" : owner , "link" : link ,  "likes" : like_arr , "comments" : comments ,
                             "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id ,
                             'owner_name' : owner_name , 'ima': to_db})
-        return redirect(url_for('main_page'))
+        return redirect(url_for('feed'))
     return render_template('post.html')
 
 
@@ -979,107 +989,8 @@ def my_post():
             id = request.form['the_id']
             link_db.find_one_and_delete({"post_id" : id})
             return render_template('my_post.html' , posts = tos)
-            
-        if request.form['sub'] == "Promote":
-            id = request.form['the_id']    
-            session['post_edit'] = id
-            return redirect(url_for('promote'))
-    
+         
     return render_template('my_post.html' , posts = tos ,no = noz , dude = this_guy , ppic = nnn)
-
-@application.route('/promote/' , methods = ['POST','GET'])
-@csrf.exempt
-def promote():
-    
-    the_post =  session['post_edit']
-    da_post = link_db.find_one({"post_id" : the_post})
-    post = link_db.find_one({"post_id" : the_post})
-    new_tags = []
-    older_tags = post['tags']
-    ad_view = []
-    u = "U.S.A and Canada"
-    e = "Europe"
-    a = "Africa"
-    aS = "Asia"
-    aU = "Australia"
-    s =  "South America"
-    g = "Global"
-    
-    five = {"plan" : "five",
-               " maxi ": 600,
-                "mini" : 550
-                }
-    twelve = {
-            "plan" : "twelve",
-            "maxi" : 1500 ,
-            "mini" : 1300
-        }
-    fifty = {
-            "plan" : "fifty_dollar" , # up to 8000 views
-            "maxi" : 9000 ,
-            "mini" : 7500
-        }
-    twenty_four = {
-            "plan" : "24 hrs",
-            "maxi" : 1400,
-            "mini" : 1300,
-            "cost" : 10
-        }
-    week  = {
-            "plan" : "1 Week",
-            "maxi" : 12800,
-          "  mini" : 12000,
-           " cost" : 70
-        }
-    three = {
-           " plan" : "72 hrs",
-            "maxi" : 5100,
-           " mini" :4800,
-            "cost" : 32 
-        }
-    
-    if request.method == "POST":
-        tags = request.form['tags']  
-        new_tag_arr = tags.split(",")
-        new_tags.extend(new_tag_arr)
-        plan = request.form.get("plan")
-        if plan == "2":
-            p = five
-        if plan == "3":
-            p =twelve
-        if plan == "4":
-            p = fifty  
-        if plan == "5":
-            p = twenty_four    
-        if plan == "6":
-            p = three
-        if plan == "7":
-            p = week
-        
-        target_reg = request.form.get("target_reg")
-        if  target_reg =="11":
-            reg = u
-        if  target_reg =="12":
-            reg =e
-        if  target_reg =="13":
-            reg = a
-        if  target_reg =="14":
-            reg = aS
-        if  target_reg =="15":
-            reg = aU
-        if  target_reg =="16":
-            reg = s
-        if  target_reg =="17":
-            reg = g
-        
-        # payment must be done to continue with the rest of the process
-        
-            link_db.find_one_and_update({'post_id' : the_post} , {'$set' : {'tags' : new_tags , 'region' : reg ,
-                                        'ad_view' : ad_view , 'plan' : p }})
-        return redirect(url_for('my_post'))
-          
-    return render_template('promote.html' , post = da_post)
-
 
 @application.route('/edit_post/' ,methods = ['POST','GET'])
 @csrf.exempt
