@@ -4,9 +4,10 @@
 
 Log in Here
 
+
 <form method="POST" action= "/login/">
 
-        {{ form.csrf_token }}
+        {{hcaptcha}}
 
 
         {{ form.email}} {{form.email.label}}

@@ -18,7 +18,7 @@ import socket,os
 from functools import wraps
 from gridfs import*
 from bson import ObjectId
-from flask_recaptcha import ReCaptcha
+from flask_hcaptcha import hCaptcha
 from flask_wtf import RecaptchaField,FlaskForm
 from wtforms import *
 from wtforms.validators import EqualTo, InputRequired
@@ -43,29 +43,26 @@ ip = socket. gethostbyname(socket. gethostname())
 ipst = str(ip)
 application = Flask(__name__)
 
-#mpesa configs
-#mpesa_api = MpesaAPI(application)
-application.config["API_ENVIRONMENT"] = "sandbox"
-application.config["APP_KEY"] = "..." 
-application.config["APP_SECRET"] = "..." 
+#captcha
 
 
+application.config['HCAPTCHA_ENABLED'] =  False
+
+application.config ["HCAPTCHA_SITE_KEY"]  =  "cd654ebc-97ad-44fb-8ddc-963287c6d77b"
+
+application.config ['HCAPTCHA_SECRET_KEY'] = "0xb1E280895395797DCF11D0B1807aa9678A4B391d" 
+
+hcaptcha = hCaptcha(application)
 #images
 upload_folder = 'static/images'
 application.config['UPLOAD_FOLDER'] = upload_folder
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
-#recaptcha configs
-recaptcha = ReCaptcha(application = application)
-application.config['RECAPTCHA_PUBLIC_KEY'] =  "6Lf2-MIaAAAAAKhR8vc-wUo6PyWIXtevEN3R7HpY"
-application.config['RECAPTCHA_PRIVATE_KEY'] = "6Lf2-MIaAAAAACzF1Nmhmq0dGEGdf9jQJyIqOEmS"
-application.config['RECAPTCHA_DATA_ATTRS'] = {'theme': 'dark'}
-application.config['TESTING'] = True
+
+
 #csrf protection
-csrf = CSRFProtect(application)
-application.config['WTF_CSRF_SECRET_KEY'] = 'edfdfgdfgdfgfghdfggfg'
 SECRET_KEY = "dsfdsjgdjgdfgdfgjdkjgdg"
-SECRET = "secret"
+csrf = CSRFProtect(application)
 
 #mongoDB configs
 application.config['MONGO_DBNAME'] = 'users'
@@ -74,43 +71,13 @@ application.config['MONGO_URI'] = 'mongodb://localhost:27017/users'
 
 mongo = PyMongo(application)
 
-
-#FlaskMailConfigs
-
-application.config['MAIL_SERVER'] = "smtp.gmail.com"
-application.config['TESTING'] = True
-application.config['MAIL_PORT'] = 465
-application.config['MAIL_USE_TLS'] = False
-application.config['MAIL_USE_SSL'] = True
-application.config['MAIL_DEBUG'] = True
-application.config['MAIL_USERNAME']  = "jacksonmuta123@gmail.com"
-application.config['MAIL_PASSWORD'] =  "aqlxhzaziujnllzi"
-application.config['MAIL_DEFAULT_SENDER'] = "Reset Password Server "
-application.config['MAIL_SUpplicationRESS_SEND'] = False
-application.config['MAX_EMAIL'] = None
-application.config['MAIL_ASCII_ATTATCHMENTS'] = False
-
-#Post_guy = Mail(application)
-
-
 client = MongoClient('localhost', 27017)
 db_pic = client.users
 gfs = GridFS(db_pic)
 
-
-
-
-
-
-#'mongodb://'+ipst+':27017/kamp_users'
-#'mongodb://localhost:27017/kamp_users'
-#'mongodb+srv://jackson:@hbcall.ihz6j.azure.mongodb.net/kamp_users?retryWrites=true&w=majority'
-#'mongodb://jackson:mutamuta@hbcall-shard-00-00.ihz6j.azure.mongodb.net:27017,hbcall-shard-00-01.ihz6j.azure.mongodb.net:27017,hbcall-shard-00-02.ihz6j.azure.mongodb.net:27017/kamp_users?ssl=true&replicaSet=atlas-aykvid-shard-0&authSource=admin&retryWrites=true&w=majority'
 application.permanent_session_lifetime = timedelta(days=30)
 
-
 Hash_passcode = CryptContext(schemes=["sha256_crypt" ,"des_crypt"],sha256_crypt__min_rounds=131072)
-
 
 mongo = PyMongo(application)
 
@@ -132,10 +99,10 @@ def login_required(f):
 class Base_form(Form):
     
     class Meta:
-        csrf = True 
-        csrf_class = SessionCSRF 
-        csrf_secret = "fhgfjgygkgchfjfjfdumbo"
-        csrf_time_limit = timedelta(minutes=25)
+        csrf = False
+        csrf_class = SessionCSRF
+        csrf_secret = 'EPj00jpfj8Gx1SjndfgdgdgdfgdfgyLxwBBSQfnQ9DJYe0Ym'
+        csrf_time_limit = timedelta(minutes=20)
         
 class login_form(Base_form):
         
@@ -185,7 +152,7 @@ def reset_session_required(f):
             return redirect(url_for('reset_pass'))
     return wrap
 @application.route('/reset_pass/', methods = ['POST','GET'])
-@csrf.exempt
+
 def  reset_pass():
     reset_db = mongo.db.pass_reset
     code = random.randint(145346 , 976578)
@@ -206,7 +173,7 @@ def  reset_pass():
             return redirect(url_for('register'))
     return render_template('reset_pass.html')
 @application.route('/enter_code/' , methods = ['POST','GET'])
-@csrf.exempt
+
 def enter_code():
     email = session['rset']
     if email in session:
@@ -241,7 +208,7 @@ class peopleass(Base_form):
         
 
 @application.route('/peopleass/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def peopleass(email):
     form = peopleass()
     if request.method == "POST" and form.validate():
@@ -276,7 +243,7 @@ class login_form(Base_form):
         
         passc = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")])            
 @application.route('/login/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def login():
     form = login_form()
     if request.method == "POST" and form.validate():
@@ -307,6 +274,7 @@ def login():
     return render_template('login.html' , form = form)
 
 @application.route('/logout/' , methods = ['POST','GET'])
+@login_required
 def logout():
     if request.method == "POST":
         if request.form['sub'] == "Yes":
@@ -335,7 +303,7 @@ class register_form(Base_form):
         passc2 = PasswordField("Confirm Password" , [validators.Length(min = 8) , EqualTo("passc") , InputRequired()])
     
 @application.route('/register/',methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def register():
     form = register_form()
     if request.method == "POST" and "img" in request.files:
@@ -356,32 +324,29 @@ def register():
         def allowed_file(filename):
             return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
             
-        if allowed_file(filename):
-            fl = email.replace("." , "")
-            os.mkdir("static/images/" + fl)
-            pt = "static/images/" + fl + "/"
-            des = fl + "/" + filename
-            
-            pic.save("static/images/" + des)
-            image1 = "static/images/" + des
-            image = Image.open(image1)
-            new = image.convert("RGB")
-            new.save(pt + fl + '.jpg')
-            image = pt +fl + ".jpg"
-            with open(image , "rb") as image2string:
-                converted_string = base64.b64encode(image2string.read())
-                uploa = converted_string.decode('utf-8')
-            os.remove("static/images/" + fl  + "/" + filename)
         registered = users.find_one({"email":email})
         if registered:
             mess = "You are already registered,please Log in"
             return redirect(url_for('home'))
         if passc == passc2  and not registered:
+            if allowed_file(filename):
+                fl = email.replace("." , "")
+                os.mkdir("static/images/" + fl)
+                pt = "static/images/" + fl + "/"
+                des = fl + "/" + filename
+                
+                pic.save("static/images/" + des)
+                image1 = "static/images/" + des
+                image = Image.open(image1)
+                new = image.convert("RGB")
+                new.save(pt + fl + '.jpg')
+                image = pt +fl + ".jpg"
+            
             mess = "Registerd Successfully" 
             favs = []
             tags = []
             users.insert_one({"email":email ,'username':username , "password":hashed , 
-                            "profile" : uploa , "favs" : favs , "tags" : tags , "verified" :0 , 'saved' : [] })
+                             "favs" : favs , "tags" : tags , "verified" :0 , 'saved' : [] })
             
             if users.find_one({"email":email}):
                 code = random.randint(145346 , 976578)
@@ -397,7 +362,7 @@ class complete_regist(Base_form):
     code = StringField("Verification Code" , [validators.InputRequired(message="Please Enter The Code Sent Via Email")])
 
 @application.route('/complete_regist' , methods = ['POST' , 'GET'])
-@csrf.exempt
+@login_required
 def complete_regist():
     verif = mongo.db.verify_email
     user_email = session['login_user']
@@ -420,7 +385,7 @@ def complete_regist():
     return render_template('verif_reg.html' , m = user_email)
     
 @application.route('/choose_tags/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def choose_tags():
     the_tags = ['music' , 'sports' , 'crypto' ,'technology' , 'real estate' , 'nature' , 'art' , 'gaming' , 'nft' ,'politics' ,'elon' , 'watch' ,
                     'memes' , 'russia'
@@ -449,6 +414,7 @@ def choose_tags():
     return render_template('choose_tags.html' , tags = the_tags)
 
 @application.route('/choose_favs/' , methods = ['POST','GET'])
+@login_required
 def choose_favs():
     user_email = session['login_user']
     user_db = mongo.db.users
@@ -492,7 +458,6 @@ def choose_favs():
     return render_template('choose_favs.html')
 
 @application.route('/feed/' , methods = ['POST','GET'])
-@csrf.exempt
 @login_required
 def feed():
     link_db = mongo.db.links
@@ -541,20 +506,6 @@ def feed():
         if request.form['sub'] == "View Link": 
             session["linky"] = the_id
             return redirect(url_for('view_link' ))
-        
-        if request.form['sub'] == "Follow":
-            the_id = request.form['id']
-            owner_d =  link_db.find_one({"post_id" : the_id})
-            owner = owner_d['owner']
-            cl = session['login_user']
-            folloin = users.find_one({'email' :cl})
-            f = folloin['favs']
-            if not owner in f:
-                f.append(owner)
-                users.find_one_and_update({'email' : user_email} , {'$set' : {'favs' : f}})
-            else:
-                f.remove(owner)
-                users.find_one_and_update({'email' : user_email} , {'$set' : {'favs' : f}})
                 
         if request.form['sub'] == "Like":
             the_post = link_db.find_one({"post_id" : the_id})
@@ -577,7 +528,7 @@ def feed():
     return render_template('main.html' , arr = render_array , fav = fav_arr , email = user_email )
 
 @application.route('/search/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def search():
     user_email = session['login_user']
     if request.method == "POST":
@@ -588,6 +539,7 @@ def search():
     return render_template('search.html')
 
 @application.route('/found_posts/' , methods = ['POST','GET'])
+@login_required
 def found_posts():
     to_show = []
     de_search = session['q']
@@ -610,7 +562,7 @@ def found_posts():
 
 
 @application.route('/found_people' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def found_people():
     session.pop("de_email" ,None)
     de_search = session['q']
@@ -660,6 +612,7 @@ def found_people():
     return render_template('found_people.html' , p = new_p , n = no)
 
 @application.route('/pple/' , methods = ['POST','GET'])
+@login_required
 def pple():
     if request.method == "POST":
         name = request.form['id']
@@ -672,7 +625,7 @@ def pple():
 
 
 @application.route('/profile/' , methods = ['POST','GET'])  
-@csrf.exempt
+@login_required
 def profile():
     trend = mongo.db.trending
     me = session['login_user']
@@ -701,7 +654,7 @@ def profile():
 
 
 @application.route('/saved/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def saved():
     de_render = []
     user_email = session['login_user']
@@ -733,7 +686,7 @@ def saved():
     return render_template('saved.html' , favss = de_render , m = m )
 
 @application.route('/view_prof/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def view_prof():
     user = session['de_email']
     user_email = session['login_user']
@@ -787,7 +740,7 @@ def view_prof():
 
 
 @application.route('/edit_profile/' ,methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def edit_profile():
     user = mongo.db.users
     user_email = session['login_user']
@@ -801,7 +754,7 @@ def edit_profile():
 
 
 @application.route('/post_on_tags/' , methods = ['POST','GET'])
-@csrf.exempt
+
 @login_required
 def post_on_tags():
     
@@ -809,7 +762,7 @@ def post_on_tags():
    
     return render_template('post_on_tags.html')
 @application.route('/view_link/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def view_link():
     link_db = mongo.db.links
     user = mongo.db.users
@@ -870,6 +823,7 @@ def view_link():
     return render_template('view_link.html' , taged = render_arr ,  item = post_in , link = link)
 
 @application.route('/advert/' , methods = ['POST','GET'])
+@login_required
 def advert():
     advert_db = mongo.db.adverts 
     if request.method == "POST":
@@ -904,7 +858,7 @@ def advert():
     
     return render_template('advert.html')
 @application.route('/post/' , methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def post(): 
     if request.method == "POST":
         
@@ -961,7 +915,7 @@ def post():
 
 
 @application.route('/my_post/' , methods = ['POST','GET'])
-@csrf.exempt
+
 @login_required
 def my_post():
     me =  session['login_user']
@@ -999,7 +953,7 @@ def my_post():
     return render_template('my_post.html' , posts = tos ,no = noz , dude = this_guy , ppic = nnn)
 
 @application.route('/edit_post/' ,methods = ['POST','GET'])
-@csrf.exempt
+@login_required
 def edit_post():
     da_id = session['post_edit']
     the_post = link_db.find_one({"post_id" : da_id})
