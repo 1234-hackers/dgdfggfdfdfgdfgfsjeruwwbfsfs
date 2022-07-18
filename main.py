@@ -112,14 +112,17 @@ def home():
         existing_user  = users.find_one({'email':email} )
         if existing_user:
                 passcode = request.form['passcode']
+                v = str(existing_user['verified'])
 
                 existing_pass = existing_user['password']
-                if Hash_passcode.verify(passcode,existing_pass) :
+                if Hash_passcode.verify(passcode,existing_pass):
                     username = existing_user['username']
                     if username in session:
                         fa = existing_user['tags']
                         if len(fa) < 5:
                              return redirect(url_for('choose_tags'))
+                        if v == 0:
+                            return redirect(url_for('complete_regist'))
                         else:
                             return redirect(url_for('feed'))
                     else:    
@@ -240,12 +243,15 @@ def login():
                 passcode = request.form['passcode']
 
                 existing_pass = existing_user['password']
-                if Hash_passcode.verify(passcode,existing_pass):
+                v = str(existing_user['verified'])
+                if Hash_passcode.verify(passcode,existing_pass)  :
                     username = existing_user['username']
                     if username in session:
                         fa = existing_user['tags']
                         if len(fa) < 5:
                              return redirect(url_for('choose_tags'))
+                        if v == 0:
+                            return redirect(url_for('complete_regist'))
                         else:
                             return redirect(url_for('feed'))
                     else:    
@@ -302,6 +308,7 @@ def register():
                 os.mkdir("static/images/" + fl)
                 pt = "static/images/" + fl + "/"
                 des = fl + "/" + filename
+                dess = "static/images/" + des
                 
                 pic.save("static/images/" + des)
                 image1 = "static/images/" + des
@@ -309,6 +316,7 @@ def register():
                 new = image.convert("RGB")
                 new.save(pt + fl + '.jpg')
                 image = pt +fl + ".jpg"
+                os.remove(dess)
             
             mess = "Registerd Successfully" 
             favs = []
