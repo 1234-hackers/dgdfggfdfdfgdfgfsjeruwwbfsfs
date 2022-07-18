@@ -104,24 +104,17 @@ class Base_form(Form):
         csrf_secret = 'EPj00jpfj8Gx1SjndfgdgdgdfgdfgyLxwBBSQfnQ9DJYe0Ym'
         csrf_time_limit = timedelta(minutes=20)
         
-class login_form(Base_form):
-        
-        email = StringField("Email",[validators.email()])
-        
-        passc = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")]) 
            
 @application.route('/',methods = ["POST","GET"])
-@csrf.exempt
 def home():
-    form = login_form()
-    if request.method == "POST" and form.validate():
-        email = form.email.data
+    if request.method == "POST" and hcaptcha.verify():
+        email = request.form['email']
         existing_user  = users.find_one({'email':email} )
         if existing_user:
-                passcode = form.passc.data
+                passcode = request.form['passcode']
 
                 existing_pass = existing_user['password']
-                if Hash_passcode.verify(passcode,existing_pass):
+                if Hash_passcode.verify(passcode,existing_pass) :
                     username = existing_user['username']
                     if username in session:
                         fa = existing_user['tags']
@@ -139,7 +132,7 @@ def home():
                             return redirect(url_for('choose_tags'))
                         else:    
                             return redirect(url_for('feed'))   
-    return render_template("index.html" , form = form)
+    return render_template("index.html")
 
 
 def reset_session_required(f):
@@ -236,21 +229,15 @@ class Base_form(FlaskForm):
         csrf_class = SessionCSRF 
         csrf_secret = b"cffhgfghfgjgherydumbo"
         csrf_time_limit = timedelta(minutes=25)
-        
-class login_form(Base_form):
-        
-        email = StringField("Email",[validators.email()])
-        
-        passc = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")])            
+                   
 @application.route('/login/' , methods = ['POST','GET'])
-@login_required
 def login():
-    form = login_form()
-    if request.method == "POST" and form.validate():
-        email = form.email.data
+ 
+    if request.method == "POST" and  hcaptcha.verify():
+        email = request.form['email']
         existing_user  = users.find_one({'email':email} )
         if existing_user:
-                passcode = form.passc.data
+                passcode = request.form['passcode']
 
                 existing_pass = existing_user['password']
                 if Hash_passcode.verify(passcode,existing_pass):
@@ -271,7 +258,7 @@ def login():
                             return redirect(url_for('choose_tags'))
                         else:    
                             return redirect(url_for('feed'))
-    return render_template('login.html' , form = form)
+    return render_template('login.html')
 
 @application.route('/logout/' , methods = ['POST','GET'])
 @login_required
@@ -284,39 +271,20 @@ def logout():
             return redirect(url_for('feed')) 
     return render_template('logout.html')
 
-class Base_form(FlaskForm):
-    
-    class Meta:
-        csrf = False
-        csrf_class = SessionCSRF 
-        csrf_secret = "dfgdfgtryfhgfhhgfhdxhd"
-        csrf_time_limit = timedelta(minutes=25)
-        
-class register_form(Base_form):
-        
-        email = StringField("Email",[validators.email()])
-        
-        username = StringField("Username" , [validators.InputRequired(message="A Nickname or your most known Name")])
-        
-        passc = PasswordField("Password" , [validators.Length(min = 8 , max = 15 , message = "Minimum Length Is 8 Characters")]) 
-           
-        passc2 = PasswordField("Confirm Password" , [validators.Length(min = 8) , EqualTo("passc") , InputRequired()])
-    
 @application.route('/register/',methods = ['POST','GET'])
-@login_required
 def register():
-    form = register_form()
+    
     if request.method == "POST" and "img" in request.files:
         
         pic = request.files['img']
         
-        email = form.email.data
+        email = request.form['email']
         
-        username =  form.username.data
+        username =  request.form['username']
         
-        passc = form.passc.data
+        passc = request.form['passc']
         
-        passc2 = form.passc2.data
+        passc2 = request.form['passc2']
         
         hashed = Hash_passcode.hash(passc2)
         
@@ -356,7 +324,7 @@ def register():
                 #send the code Here
                 
                 return redirect(url_for('complete_regist'))
-    return render_template('register.html',form = form)
+    return render_template('register.html')
 
 class complete_regist(Base_form):
     code = StringField("Verification Code" , [validators.InputRequired(message="Please Enter The Code Sent Via Email")])
@@ -890,7 +858,8 @@ def post():
             
         if allowed_file(filename): 
             da_nam = post_id.replace("." , "")
-            da_name = da_nam[0:10]
+            da_nami = da_nam.replace("/" , "")
+            da_name = da_nami[0:10]
             th.save("static/images/" + filename)
             image1 = "static/images/"  + filename
             image = Image.open(image1)

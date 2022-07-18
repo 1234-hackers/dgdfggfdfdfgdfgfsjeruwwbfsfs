@@ -4,25 +4,31 @@
 
 <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data" >
 
-{{ form.csrf_token }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-
-    {{ form.email}}  {{form.email.label}}
-<br>
+Email
 <br>
 
-  {{ form.username}}  {{ form.username.label}}
+<input name="email" placeholder="Email" type="email">
 <br>
 <br>
-
-    {{ form.passc}}  {{form.passc.label}}
+Username
+<br>
+<input name="username" placeholder="Email" type="text">
 <br>
 <br>
-
- {{ form.passc2}}  {{ form.passc2.label}}
+Password
+<br>
+<input name="passc"  placeholder="Password" type="password">
 <br>
 <br>
-
+Confirm Password
+<br>
+<input name="passc2"  placeholder="Password" type="password">
+<br>
+<br>
+Profile Picture
+<br>
 <input type = "file" name = "img" required onchange="loadFile(event)">
 <br>
 <br>
