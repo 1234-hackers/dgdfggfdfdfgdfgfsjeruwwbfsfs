@@ -10,35 +10,40 @@
     {{to_do}}
     
 <h3>
-    {% for x in item%}
-
-    {{  x.title}}
 
 
-    <img src = "{{x.ima}}">
+    {{ item.title}}
+    <br>
+    <br>
+
+
+    <img src = "{{item.ima}}">
+    <br>
     <br>
 
     <h2>
         Link Owner
-    </h2> {{  x.owner }}
+    </h2> {{  item.owner }}
         <br>
         <br>
-        Main Link <br> {{  x.link }}
+        Main Link <br> {{  item.link }}
         <br>
         <br>
-        Description ::::> {{x.description}}
+        Description ::::> {{item.description}}
         <br>
         <br>
-        {%for n in x.comments%}
+        {%for n in item.comments%}
         {% for key, value in n.items() %}
 {{key}}
 {{value}}
 {%endfor%}
 {%endfor%}
+
+
         
         <form name="view" method="POST" action="{{ url_for('view_link') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <input type="hidden" name="id" value="{{x.post_id}}" valuex="view"> 
+            <input type="hidden" name="id" value="{{item.post_id}}" valuex="view"> 
             <input type="text" name ="comm" placeholder = "Comment" > 
             <input type="submit" name="sub" value="Comment">
             <br>
@@ -49,7 +54,7 @@
             </form>
 
 
-    {%endfor%}
+ 
 
     <h2> 
         More  Posts

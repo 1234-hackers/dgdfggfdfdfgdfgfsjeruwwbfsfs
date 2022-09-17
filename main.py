@@ -788,11 +788,15 @@ def view_link():
             for x in all_posts:
                 tags = x['tags']
                 if indiv_tags in tags: 
-                    arr1.append(x)        
+                    if not x in render_arr: 
+                        arr1.append(x)        
         render_arr.extend(arr1)
         if len(render_arr) < 500:
             random_psts = all_posts = link_db.find().limit(10)
-            render_arr.extend(random_psts)   
+            for x in random_psts:
+                p = x
+                if not p in render_arr:
+                    render_arr.extend(random_psts)   
             
     else:
         return redirect(url_for('feed'))
