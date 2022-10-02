@@ -37,7 +37,7 @@ Description {{x.description}}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <input type="hidden" name="the_id" value="{{x.post_id}}" valuex="view">  
     <input type="submit" name="sub" value="Edit">
-    <input type="submit" name="sub" value="Delete">
+    <input type="submit" name="sub" onchange="loadFile(event)" value="Delete">
 
 
     </form>

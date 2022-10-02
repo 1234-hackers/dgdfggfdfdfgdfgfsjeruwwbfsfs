@@ -28,16 +28,15 @@ Posts Are Here
 </h2>
 {{ x.link }}
 <br>
-<br>
-{{x.total_likes}}
 <h2>
   
     <form name="view" method="POST" action="{{ url_for('feed') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
         <input type="submit" name="sub" value="View Link">
-        <input type="button" name="sub" value="Like">
-       
+        <br>
+
+        {{x.total_likes}} <input type="submit" name="sub" value="Like">
         
     
         </form>

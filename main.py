@@ -313,7 +313,8 @@ def register():
                 pic.save("static/images/" + des)
                 image1 = "static/images/" + des
                 image = Image.open(image1)
-                new = image.convert("RGB")
+                image2 = image.resize((150,150),Image.ANTIALIAS)
+                new = image2.convert("RGB")
                 new.save(pt + fl + '.jpg')
                 image = pt +fl + ".jpg"
                 os.remove(dess)
@@ -666,19 +667,18 @@ def saved():
 def view_prof():
     user = session['de_email']
     user_email = session['login_user']
+    
     the_user = users.find_one({"email" :user})
     mez = users.find_one({'email': user_email})
-    folloin = mez['favs']
+    
     all_em_posts = link_db.find({'owner' : user})
         
-    
-    
-    cl = session['login_user']
-    folloinx = users.find_one({'email' :cl})
+
+    folloinx = users.find_one({'email' :user_email})
     f = folloinx['favs']
     
     dudes = session["de_email"]
-    if not dudes in f:
+    if dudes in f:
         state = "Unfollow"
     else:
         state = "Follow"
@@ -703,7 +703,7 @@ def view_prof():
             if not the_id in f:
                 f.append(the_id)
                 state = "Unfollow"
-                users.find_one_and_update({'email' : user_email} , {'set' : {'favs' : f}})
+                users.find_one_and_update({'email' : user_email} , {'$set' : {'favs' : f}})
                 return render_template('view_prof.html' , usr = the_user, state = state, pic = nnn , posts = all_em_posts)
             else:
                 f.remove(the_id)
@@ -718,11 +718,46 @@ def view_prof():
 @application.route('/edit_profile/' ,methods = ['POST','GET'])
 @login_required
 def edit_profile():
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
     user = mongo.db.users
     user_email = session['login_user']
-    info = user.find({"email" : user_email})
+    email = user_email
+    fl = email.replace("." , "")
+    info = user.find_one({"email" : user_email})
     if request.method == "POST":
-        name = request.form['username']
+        
+        if request.form['sub'] == "Update Profile Picture":
+            image = request.files['img']
+            #os.remove('static/images/' + fl)
+            filename = image.filename
+            if allowed_file(filename): 
+                os.mkdir("static/images/" + fl)
+                pt = "static/images/" + fl + "/"
+                des = fl + "/" + filename
+                dess = "static/images/" + des
+                    
+                image.save("static/images/" + des)
+                image1 = "static/images/" + des
+                image = Image.open(image1)
+                image2 = image.resize((270,150),Image.ANTIALIAS)
+                new = image2.convert("RGB")
+                new.save(pt + fl + '.jpg')
+                image = pt +fl + ".jpg"
+                os.remove(dess)
+                return redirect(url_for('feed'))
+        
+        
+        if request.form['sub'] == "Update Username":
+            name = request.form['username']
+            if not name == info['username']:
+                if not name == "":
+                    users.find_one_and_update({"email" : user_email} ,{ '$set' :  {"username":name}})
+                    return redirect(url_for('feed'))
+            
+            
+            
+                
     return render_template('edit_profile.html' , inf = info)
 
 
