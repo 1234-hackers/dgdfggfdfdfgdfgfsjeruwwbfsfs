@@ -18,7 +18,7 @@ import socket,os
 from functools import wraps
 from gridfs import*
 from bson import ObjectId
-from flask_hcaptcha import hCaptcha
+#from flask_hcaptcha import hCaptcha
 from flask_wtf import RecaptchaField,FlaskForm
 from wtforms import *
 from wtforms.validators import EqualTo, InputRequired
@@ -52,7 +52,7 @@ application.config ["HCAPTCHA_SITE_KEY"]  =  "cd654ebc-97ad-44fb-8ddc-963287c6d7
 
 application.config ['HCAPTCHA_SECRET_KEY'] = "0xb1E280895395797DCF11D0B1807aa9678A4B391d" 
 
-hcaptcha = hCaptcha(application)
+#hcaptcha = hCaptcha(application)
 #images
 upload_folder = 'static/images'
 application.config['UPLOAD_FOLDER'] = upload_folder
@@ -107,7 +107,7 @@ class Base_form(Form):
            
 @application.route('/',methods = ["POST","GET"])
 def home():
-    if request.method == "POST" and hcaptcha.verify():
+    if request.method == "POST":# and hcaptcha.verify():
         email = request.form['email']
         existing_user  = users.find_one({'email':email} )
         if existing_user:
@@ -236,7 +236,7 @@ class Base_form(FlaskForm):
 @application.route('/login/' , methods = ['POST','GET'])
 def login():
  
-    if request.method == "POST" and  hcaptcha.verify():
+    if request.method == "POST":# and  hcaptcha.verify():
         email = request.form['email']
         existing_user  = users.find_one({'email':email} )
         if existing_user:
@@ -574,7 +574,7 @@ def found_people():
                 new_p.append(i)
     
         if len(new_p) < 1:
-                no = "No Result Found,Please Check Your Spelling See More"
+                no = "No Result Found,Please Check Your Spelling See More..."
         else:
                 no = "Results From Search"
         
@@ -610,6 +610,11 @@ def profile():
     the_arr = ["electric car" , "rap" , "football"]
     acc = users.find_one({"email" : me})
     favs = acc['favs']
+    emps = []
+    for x in favs:
+        de_name = users.find_one({'email': x})['username']
+        emps.append(de_name)
+        
     tags = acc['tags']
     user = acc['username']
     minez = []
@@ -625,8 +630,20 @@ def profile():
     links = []
     links.append(prof_pic)
     dez_name = Markup(prof_pic)
-    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg"                
-    return render_template('profile.html' , me = me , favs = favs , tags = tags , mine = minez ,
+    nnn =   "/static/images/" + me2 +"/" + me2 +".jpg" 
+    if request.method == "POST":
+        tag = request.form['sub'] 
+        
+        user = request.form['sub2'] 
+        if tag:
+            session['de_tag'] = tag
+        if user:
+            session['de_name'] = user
+             
+    
+        
+                      
+    return render_template('profile.html' , me = me , favs = emps , tags = tags , mine = minez ,
                            more = more_posts , links = links , prof = dez_name , nn = nnn)
 
 

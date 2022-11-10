@@ -16,27 +16,27 @@
 </div>
 </div>
 <div align = "left">
-<h2>
-    My Tags
-</h2>
 
-{%for x in tags%}
-<ul>
-    <li>
-    {{x}}
-</li>
-</ul>
+<form name="view" method="POST" action="{{ url_for('profile') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>  
+    <br>
+    <h2>
+        My Tags
+    </h2>
+    {%for x in tags%}
+        <input type="submit" name="sub" value="{{x}}">
+        <br>
+        <br>
     {% endfor %}
-
-<h2>
-
-    People I Follow
-
-</h2>
-{%for y in favs%}
-
-        {{y}}  
-{% endfor %}
+    <h2>
+        People I Follow
+    </h2>
+    {%for y in favs%}
+            <input type="submit" name="sub2" value="{{y}}">   
+            <br>
+            <br> 
+    {% endfor %}
+    </form>
 
 
 

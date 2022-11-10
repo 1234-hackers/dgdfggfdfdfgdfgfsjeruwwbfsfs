@@ -1,0 +1,7 @@
+new222 module
+=============
+
+.. automodule:: new222
+   :members:
+   :undoc-members:
+   :show-inheritance:
