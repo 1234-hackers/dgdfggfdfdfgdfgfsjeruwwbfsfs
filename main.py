@@ -940,9 +940,15 @@ def post():
         owner_name = wner_name['username']
         like_arr = [owner]
         comments = []
+        now = datetime.now()
+        now_c = now.strftime("Time  %Y:%m:%d: , %H:%M:%S")
+        timez = now_c
+        fl = owner.replace("." , "")
+        fjp  = fl + ".jpg"
+        imz = "/static/images/"+fl +"/" + fjp
         link_db.insert_one({"owner" : owner , "link" : link ,  "likes" : like_arr , "comments" : comments ,
                             "tags" : tag_arr , "title" : title , "description" : desc , "post_id" : post_id ,
-                            'owner_name' : owner_name , 'ima': to_db})
+                            'owner_name' : owner_name , 'ima': to_db , 'time' : timez , 'imz' : imz})
         return redirect(url_for('feed'))
     return render_template('post.html')
 

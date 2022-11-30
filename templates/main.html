@@ -15,11 +15,13 @@ Posts Are Here
 </h2>
 
 {% for x in arr%}
-
-<img src = "{{x.ima}}">
-
-<h3> Owner </h3>{{ x.owner }}
+<img width = 30 width = 50 src = "{{x.imz}}">{{x.owner_name}}
 <br>
+{{ x.time }}
+<br>
+<img src = "{{x.ima}}">
+<br>
+
 <br>
 {{ x.description }}
 <br>
@@ -28,15 +30,12 @@ Posts Are Here
 </h2>
 {{ x.link }}
 <br>
-<h2>
   
     <form name="view" method="POST" action="{{ url_for('feed') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="id" value="{{x.post_id}}" valuex="view">  
         <input type="submit" name="sub" value="View Link">
-        <br>
-
-        {{x.total_likes}} <input type="submit" name="sub" value="Like">
+        <input type="submit" name="sub" value="Like">
         
     
         </form>
